@@ -27,6 +27,12 @@ export const content: Record<string, any> = {
     coreElements: 'Ana Odak Noktaları',
     
     reviewTitle: 'Topluluk Yansımaları', writeReviewBtn: 'Kendi Yansımanı Bırak',
+    dailyNoteTitle: 'Mistik Günlük',
+    saveNoteBtn: 'Fısıltıyı Profilime Kaydet',
+    savedNotesTitle: 'Mistik Fısıltı Arşivim (Kaydedilenler)',
+    noSavedNotes: 'Henüz kaydedilmiş bir fısıltınız bulunmuyor.',
+    dailyNoteBoxTitle: 'Günün Mistik Fısıltısı',
+    whisperLabel: 'Fısıltı',
     
     storeBasic: 'Temel Tarama', storeSupreme: 'Yüksek Paket', storeLove: 'Aşk & Uyum Falı', storeCareer: 'Kariyer & Para', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
@@ -76,6 +82,12 @@ export const content: Record<string, any> = {
     coreElements: 'Core Focal Points',
     
     reviewTitle: 'Community Reflections', writeReviewBtn: 'Leave a Reflection',
+    dailyNoteTitle: 'Mystic Daily Note',
+    saveNoteBtn: 'Save Whisper to Profile',
+    savedNotesTitle: 'My Mystic Whisper Archive',
+    noSavedNotes: 'You have no saved whispers yet.',
+    dailyNoteBoxTitle: 'Mystic Whisper of the Day',
+    whisperLabel: 'Whisper',
     
     storeBasic: 'Basic Scan', storeSupreme: 'Supreme Pack', storeLove: 'Love & Romance', storeCareer: 'Career Path', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
@@ -125,6 +137,12 @@ export const content: Record<string, any> = {
     coreElements: 'Puntos Centrales',
     
     reviewTitle: 'Reflexiones de la Comunidad', writeReviewBtn: 'Deja una Reflexión',
+    dailyNoteTitle: 'Nota Mística Diaria',
+    saveNoteBtn: 'Guardar Susurro en Perfil',
+    savedNotesTitle: 'Mi Archivo de Susurros Místicos',
+    noSavedNotes: 'Aún no tienes susurros guardados.',
+    dailyNoteBoxTitle: 'Susurro Místico del Día',
+    whisperLabel: 'Susurro',
     
     storeBasic: 'Escaneo Básico', storeSupreme: 'Paquete Supremo', storeLove: 'Amor y Romance', storeCareer: 'Camino Profesional', storePremium: 'NAI Premium', storeElite: 'Élite Oracle',
     storeFeatures: { 
@@ -173,6 +191,12 @@ export const content: Record<string, any> = {
     coreElements: 'Центральные аспекты',
     
     reviewTitle: 'Отражения сообщества', writeReviewBtn: 'Оставить отзыв',
+    dailyNoteTitle: 'Мистическое послание дня',
+    saveNoteBtn: 'Сохранить шепот в профиль',
+    savedNotesTitle: 'Мой архив мистических шепотов',
+    noSavedNotes: 'У вас пока нет сохраненных шепотов.',
+    dailyNoteBoxTitle: 'Мистический шепот дня',
+    whisperLabel: 'Шепот',
     
     storeBasic: 'Базовый', storeSupreme: 'Особый пакет', storeLove: 'Любовь и Романтика', storeCareer: 'Карьерный Путь', storePremium: 'NAI Premium', storeElite: 'Oracle Elite',
     storeFeatures: { 
@@ -221,6 +245,12 @@ export const content: Record<string, any> = {
     coreElements: 'النقاط الأساسية',
     
     reviewTitle: 'انعكاسات المجتمع', writeReviewBtn: 'اترك تقييماً',
+    dailyNoteTitle: 'رسالة اليوم الصوفية',
+    saveNoteBtn: 'حفظ الهمس في الملف الشخصي',
+    savedNotesTitle: 'أرشيف الهمسات الصوفية الخاص بي',
+    noSavedNotes: 'ليس لديك أي همسات محفوظة حتى الآن.',
+    dailyNoteBoxTitle: 'همس اليوم الصوفي',
+    whisperLabel: 'همس',
     
     storeBasic: 'مسح أساسي', storeSupreme: 'الحزمة الفائقة', storeLove: 'الحب والرومانسية', storeCareer: 'المسار المهني', storePremium: 'ناي بريميوم', storeElite: 'نخبة أوراكل',
     storeFeatures: { 
