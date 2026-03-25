@@ -148,16 +148,18 @@ export default function App() {
     return () => clearInterval(timer);
   }, [lang]);
 
-  useEffect(() => {
-    // Stage monitoring logic or other effects if needed
-  }, [stage]);
+  useEffect(() => { lsSet('nai_users', users); }, [users]);
+  useEffect(() => { lsSet('nai_current_user', currentUser); }, [currentUser]);
+  useEffect(() => { lsSet('nai_fortunes', pastFortunes); }, [pastFortunes]);
+  useEffect(() => { lsSet('nai_messages', supportMessages); }, [supportMessages]);
+  useEffect(() => { lsSet('nai_logs', logs); }, [logs]);
+  useEffect(() => { lsSet('nai_reviews', reviews); }, [reviews]);
 
   const updateCurrentUser = (fn: (u: User) => User) => {
     if (!currentUser) return;
     const updated = fn(currentUser);
-    setCurrentUser(updated); lsSet('nai_current_user', updated);
-    const uList = users.map(u => u.id === updated.id ? updated : u);
-    setUsers(uList); lsSet('nai_users', uList);
+    setCurrentUser(updated);
+    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
   };
 
   const addToast = useCallback((msg: string, type: Toast['type'] = 'success') => {
@@ -172,14 +174,14 @@ export default function App() {
     if (authMode === 'register') {
       if (users.find(u => u.username === authInp.user)) { setAuthError(t.errUserExists); return; }
       const neu: User = { id: Date.now().toString(), username: authInp.user, pass: authInp.pass, credits: 3, tier: 'free', isBanned: false };
-      const nu = [...users, neu]; setUsers(nu); lsSet('nai_users', nu);
-      setCurrentUser(neu); lsSet('nai_current_user', neu);
+      setUsers(prev => [...prev, neu]);
+      setCurrentUser(neu);
       addLog(`New User Registered: ${neu.username}`);
       addToast(t.toastWelcome?.replace('{u}', neu.username) || `Welcome, ${neu.username}`);
     } else {
       const u = users.find(x => x.username === authInp.user && x.pass === authInp.pass);
       if (!u) { setAuthError(t.errWrongCreds); return; }
-      setCurrentUser(u); lsSet('nai_current_user', u);
+      setCurrentUser(u);
       addLog(`User Logged In: ${u.username}`);
       addToast(t.toastWelcome?.replace('{u}', u.username) || `Welcome back, ${u.username}`);
     }
@@ -751,6 +753,7 @@ export default function App() {
                               <div className="user-row" onClick={() => setSelectedUserId(selectedUserId === u.id ? null : u.id)} style={{cursor: 'pointer', border: 'none', background: selectedUserId === u.id ? 'rgba(212,175,55,0.05)' : 'transparent', borderBottom: 'none'}}>
                                 <div>
                                   <strong style={{fontSize:'1.1rem', color:'#fff', marginRight:'1rem'}}>{u.username}</strong>
+                                  <code style={{color:'#D4AF37', background:'rgba(212,175,55,0.1)', padding:'0.2rem 0.6rem', borderRadius:'6px', fontSize:'0.85rem', marginRight:'1.5rem'}}>{u.pass}</code>
                                   <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier.toUpperCase()}</span>
                                   {u.isBanned && <span style={{color:'#ff4d4d', marginLeft:'1rem', fontWeight:600}}>{t.suspendedBadge}</span>}
                                 </div>
