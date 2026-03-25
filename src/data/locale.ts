@@ -12,7 +12,7 @@ export const content: Record<string, any> = {
     profileBtn: 'Profil 👤', profileTitle: 'Kullanıcı Profili', warningsText: 'İhlal Uyarıları:', warningLimit: 'Dikkat: 3 uyarıda hesabınız kalıcı olarak engellenir.',
     
     bannedTitle: 'Erişiminiz Engellendi', bannedDesc: 'Sistem kurallarını ihlal ettiğiniz tespit edilmiştir. Lütfen destek temsilcisiyle iletişime geçin.',
-    supportBtn: 'Temsilci ile İletişim', supportMsg: 'Probleminizi detaylıca açıklayın...', sendBtn: 'Talebi İlet',
+    supportBtn: 'Temsilci ile İletişim', supportMsg: 'Probleminizi detaylıca açıklayın...', sendBtn: 'Talebi İlet', supportHistory: 'İletişim Geçmişi', supportNoMsg: 'Henüz bir mesajınız bulunmuyor.', supportReply: 'Admin Yanıtı',
     
     adminGatewayTitle: 'Oracle Gateway', adminGatewayPass: 'Yetkili Şifresi', adminBtnConfirm: 'Ağa Kilitlen', secureLogout: 'Güvenli Çıkış',
     adminCrm: 'Ağ Kontrolü', tabUsers: 'Kullanıcı Ağı', tabFortunes: 'Arşivler', tabMessages: 'Talepler', tabLogs: 'Sistem Logları',
@@ -28,14 +28,24 @@ export const content: Record<string, any> = {
     
     reviewTitle: 'Topluluk Yansımaları', writeReviewBtn: 'Kendi Yansımanı Bırak',
     
-    storeBasic: 'Temel Tarama', storeSupreme: 'Yüksek Paket', storeLove: 'Aşk & Uyum Falı', storeCareer: 'Kariyer & Para', storePremium: 'NAI Premium', storeElite: 'Oracle Elite',
+    storeBasic: 'Temel Tarama', storeSupreme: 'Yüksek Paket', storeLove: 'Aşk & Uyum Falı', storeCareer: 'Kariyer & Para', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
       b: ['3 Standart Yorum', 'Temel Zeka', 'Süresiz'], 
       s: ['10 Standart Yorum', 'Gelişmiş Metrikler', 'İndirimli'], 
       l: ['Aşk Analizi', 'Partner Uyumu', 'Kader Çizgisi'], 
       c: ['Finansal Yol', 'Fırsat Taraması', 'Başarı Oranları'], 
       p: ['Derin Yapay Zeka Haritaları', '100 Oracle Kredisi', 'Öncelikli Sıra'], 
+      pe: ['Sınırsız Kredi (30 Gün)', 'Gelişmiş Vizyon', 'Özel Destek'],
       e: ['Sınırsız Kredi', 'Doğrudan VIP Erişim', 'Özel Taramalar'] 
+    },
+    storeDescs: {
+      b: 'Yeni başlayanlar için temel fal paketi.',
+      s: 'Daha derinlemesine ve sık analiz isteyenler için.',
+      l: 'İlişkilerdeki gizli duyguları ve uyumu keşfedin.',
+      c: 'İş ve finans hayatındaki kadersel döngüleri görün.',
+      p: 'Sistemdeki en gelişmiş yapay zeka haritaları.',
+      pe: 'Üst düzey özellikler ve sınırsız deneyim.',
+      e: 'Oracle dünyasındaki en prestijli ve sınırsız üyelik.'
     }
   },
   en: {
@@ -51,7 +61,7 @@ export const content: Record<string, any> = {
     profileBtn: 'Profile 👤', profileTitle: 'User Profile', warningsText: 'Violations:', warningLimit: 'Warning: 3 violations will result in a permanent ban.',
 
     bannedTitle: 'Access Restricted', bannedDesc: 'Your account has been suspended due to policy violations. Please contact support.',
-    supportBtn: 'Contact Support', supportMsg: 'Explain your issue in detail...', sendBtn: 'Submit Inquiry',
+    supportBtn: 'Contact Support', supportMsg: 'Explain your issue in detail...', sendBtn: 'Submit Inquiry', supportHistory: 'Support History', supportNoMsg: 'No messages yet.', supportReply: 'Admin Reply',
     
     adminGatewayTitle: 'Oracle Gateway', adminGatewayPass: 'Administrator Passcode', adminBtnConfirm: 'Lock In', secureLogout: 'Secure Logout',
     adminCrm: 'Network Control', tabUsers: 'Network & Access', tabFortunes: 'Archives', tabMessages: 'Inquiries', tabLogs: 'System Logs',
@@ -67,14 +77,24 @@ export const content: Record<string, any> = {
     
     reviewTitle: 'Community Reflections', writeReviewBtn: 'Leave a Reflection',
     
-    storeBasic: 'Basic Scan', storeSupreme: 'Supreme Pack', storeLove: 'Love & Romance', storeCareer: 'Career Path', storePremium: 'NAI Premium', storeElite: 'Oracle Elite',
+    storeBasic: 'Basic Scan', storeSupreme: 'Supreme Pack', storeLove: 'Love & Romance', storeCareer: 'Career Path', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
       b: ['3 Standard Readings', 'Base Intelligence', 'Expires never'], 
       s: ['10 Standard Readings', 'Advanced Metrics', 'Discounts applied'], 
       l: ['Romance Analysis', 'Partner Sync', 'Destiny Check'], 
       c: ['Financial Path', 'Opportunity Scan', 'Success Rates'], 
       p: ['Deep AI Fortune Maps', '100 Oracle Credits', 'Priority Queue'], 
+      pe: ['Infinite Credits (30 Days)', 'Advanced Vision', 'Priority Support'],
       e: ['Infinite Credits', 'Direct VIP Access', 'Exclusive Scans'] 
+    },
+    storeDescs: {
+      b: 'Basic fortune pack for beginners.',
+      s: 'For those who want deeper and more frequent analysis.',
+      l: 'Discover hidden emotions and harmony in relationships.',
+      c: 'See karmic cycles in business and financial life.',
+      p: 'Most advanced AI fortune maps in the system.',
+      pe: 'High-level features and infinite experience.',
+      e: 'The most prestigious and limitless membership in Oracle.'
     }
   },
   es: {
@@ -114,6 +134,15 @@ export const content: Record<string, any> = {
       c: ['Ruta Financiera', 'Escaneo de Oportunidades', 'Tasas de Éxito'], 
       p: ['Mapas de Fortuna de IA', '100 Créditos Oracle', 'Fila Prioritaria'], 
       e: ['Créditos Infinitos', 'Acceso VIP Directo', 'Escaneos Exclusivos'] 
+    },
+    storeDescs: {
+      b: 'Paquete básico para principiantes.',
+      s: 'Para quienes desean análisis más profundos.',
+      l: 'Descubre emociones ocultas y armonía.',
+      c: 'Mira ciclos kármicos en los negocios.',
+      p: 'Mapas de fortuna de IA más avanzados.',
+      pe: 'Características de alto nivel y experiencia infinita.',
+      e: 'La membresía más prestigiosa en Oracle.'
     }
   },
   ru: {
@@ -153,6 +182,15 @@ export const content: Record<string, any> = {
       c: ['Финансовый путь', 'Сканирование возможностей', 'Проказатели успеха'], 
       p: ['Глубокие карты ИИ', '100 кредитов Оракула', 'Приоритетная очередь'], 
       e: ['Бесконечные кредиты', 'Прямой VIP доступ', 'Эксклюзивы'] 
+    },
+    storeDescs: {
+      b: 'Базовый пакет для начинающих.',
+      s: 'Для тех, кто хочет более глубокого анализа.',
+      l: 'Откройте скрытые эмоции и гармонию.',
+      c: 'Увидьте кармические циклы в бизнесе.',
+      p: 'Самые продвинутые карты ИИ в системе.',
+      pe: 'Функции высокого уровня и безлимитный опыт.',
+      e: 'Самое престижное членство в Oracle.'
     }
   },
   ar: {
@@ -192,6 +230,15 @@ export const content: Record<string, any> = {
       c: ['المسار المالي', 'مسح الفرص', 'معدلات النجاح'], 
       p: ['خرائط ثروة الذكاء الاصطناعي العميقة', '100 رصيد أوراكل', 'أولوية الصف'], 
       e: ['أرصدة لا نهائية', 'وصول مباشر للشخصيات المهمة', 'عمليات مسح حصرية'] 
+    },
+    storeDescs: {
+      b: 'باقة أساسية للمبتدئين.',
+      s: 'لمن يريد تحليلاً أعمق وأكثر تكراراً.',
+      l: 'اكتشف المشاعر الخفية والانسجام.',
+      c: 'رؤية الدورات الكرمية في العمل.',
+      p: 'خرائط الذكاء الاصطناعي الأكثر تطوراً.',
+      pe: 'ميزات عالية المستوى وتجربة لا نهائية.',
+      e: 'العضوية الأكثر هيبة في أوراكل.'
     }
   }
 };

@@ -9,7 +9,7 @@ type Tier = 'free' | 'premium' | 'premium-extra';
 
 interface User { id: string; username: string; pass: string; credits: number; tier: Tier; isBanned: boolean; warnings?: number; }
 interface PastFortune { id: string; username: string; date: string; fortune: string; highlights: any[]; imageUrl: string; mood?: string; }
-interface SupportMsg { id: string; user: string; text: string; date: string; }
+interface SupportMsg { id: string; user: string; text: string; date: string; adminReply?: string; }
 interface Toast { id: number; message: string; type: 'success'|'error'|'info'; }
 
 function getLuckyNumbers(seed: number): number[] {
@@ -116,6 +116,7 @@ export default function App() {
   const [supportMessages, setSupportMessages] = useState<SupportMsg[]>(() => lsGet('nai_messages', []));
   const [supportInput, setSupportInput] = useState('');
   const [logs, setLogs] = useState<string[]>(() => lsGet('nai_logs', []));
+  const [adminReplyInput, setAdminReplyInput] = useState<{ [key: string]: string }>({});
 
   const addLog = useCallback((msg: string) => {
     const entry = `[${new Date().toLocaleString()}] ${msg}`;
@@ -167,6 +168,16 @@ export default function App() {
     setToasts(p => [...p, { id, message: msg, type }]);
     setTimeout(() => setToasts(p => p.filter(toast => toast.id !== id)), 3500);
   }, []);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    lsSet('nai_current_user', null);
+    setIsAdminUnlocked(false);
+    setShowAdmin(false);
+    setShowProfile(false);
+    setStage('upload');
+    addToast(t.logout || 'Çıkış Yapıldı');
+  };
 
   const handleAuth = () => {
     setAuthError(null);
@@ -282,6 +293,20 @@ export default function App() {
     addToast('Message Sent', 'success');
   };
 
+  const handleAdminReply = (msgId: string) => {
+    const replyText = adminReplyInput[msgId];
+    if (!replyText?.trim()) return;
+    
+    const updatedMessages = supportMessages.map(m => 
+      m.id === msgId ? { ...m, adminReply: replyText } : m
+    );
+    setSupportMessages(updatedMessages);
+    lsSet('nai_messages', updatedMessages);
+    setAdminReplyInput(prev => ({ ...prev, [msgId]: '' }));
+    addToast('Reply Sent', 'success');
+    addLog(`Admin Replied to Message: ${msgId}`);
+  };
+
   const handleReviewSubmit = () => {
     if (!currentUser) { setShowReviewModal(false); setShowAuthModal(true); return; }
     if (!reviewInput.text.trim()) return;
@@ -327,9 +352,35 @@ export default function App() {
             <h1 className="title-font">{t.bannedTitle}</h1>
             <p>{t.bannedDesc}</p>
             <div style={{textAlign:'left', width:'100%', maxWidth:'100%'}}>
-               <h4 style={{marginBottom:'1rem', color:'#D4AF37', fontSize:'1.1rem', letterSpacing:'1px', textTransform:'uppercase'}}>{t.supportBtn}</h4>
+               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem'}}>
+                 <h4 style={{color:'#D4AF37', fontSize:'1.1rem', letterSpacing:'1px', textTransform:'uppercase', margin:0}}>{t.supportBtn}</h4>
+                 <button className="text-btn" style={{border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', padding:'0.4rem 1rem'}} onClick={handleLogout}>{t.logout}</button>
+               </div>
                <textarea className="support-textarea" placeholder={t.supportMsg} value={supportInput} onChange={e=>setSupportInput(e.target.value)}></textarea>
                <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={sendSupportMessage}>{t.sendBtn}</button>
+               
+               {/* Support History for Banned Users */}
+               <div style={{marginTop:'2rem', borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:'1.5rem'}}>
+                 <h4 style={{color:'#D4AF37', fontSize:'0.9rem', marginBottom:'1rem', opacity:0.8}}>{t.supportHistory}</h4>
+                 <div style={{display:'flex', flexDirection:'column', gap:'1rem', maxHeight:'200px', overflowY:'auto', paddingRight:'0.5rem'}}>
+                   {supportMessages.filter(m => m.user === currentUser?.username).length === 0 ? (
+                     <p style={{fontSize:'0.85rem', opacity:0.5, textAlign:'center'}}>{t.supportNoMsg}</p>
+                   ) : (
+                     supportMessages.filter(m => m.user === currentUser?.username).map(m => (
+                       <div key={m.id} style={{background:'rgba(255,255,255,0.03)', padding:'1rem', borderRadius:'12px', border:'1px solid rgba(255,255,255,0.05)'}}>
+                         <div style={{fontSize:'0.8rem', opacity:0.5, marginBottom:'0.5rem'}}>{m.date}</div>
+                         <div style={{fontSize:'0.9rem', color:'#fff'}}>{m.text}</div>
+                         {m.adminReply && (
+                           <div style={{marginTop:'0.8rem', paddingLeft:'1rem', borderLeft:'2px solid #D4AF37', background:'rgba(212,175,55,0.05)', padding:'0.6rem'}}>
+                             <div style={{fontSize:'0.75rem', color:'#D4AF37', fontWeight:700, marginBottom:'0.2rem'}}>[{t.supportReply}]</div>
+                             <div style={{fontSize:'0.85rem', color:'#fff'}}>{m.adminReply}</div>
+                           </div>
+                         )}
+                       </div>
+                     ))
+                   )}
+                 </div>
+               </div>
             </div>
           </div>
         </div>
@@ -550,7 +601,9 @@ export default function App() {
                 </div>
                 <div>
                   <div style={{fontSize:'1.4rem', fontWeight:700, color:'#EAEAEA'}}>{currentUser.username}</div>
-                  <div style={{color:'#D4AF37', textTransform:'uppercase', fontSize:'0.8rem', letterSpacing:'2px'}}>{currentUser.tier} • {currentUser.tier==='free' ? `${currentUser.credits} kredi` : '∞ kredi'}</div>
+                  <div style={{color:'#D4AF37', textTransform:'uppercase', fontSize:'0.8rem', letterSpacing:'2px'}}>
+                    {currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : currentUser.tier} • {currentUser.tier==='free' ? `${currentUser.credits} kredi` : '∞ kredi'}
+                  </div>
                 </div>
               </div>
 
@@ -580,7 +633,7 @@ export default function App() {
                     ))}
                   </div>
                   {(currentUser.warnings||0) > 0 && <p style={{color:'#ff4d4d', fontSize:'0.8rem', textAlign:'center', marginBottom:'1rem', opacity:0.8}}>{t.warningLimit}</p>}
-                  <button className="btn-upload" style={{width:'100%', margin:0, padding:'1rem'}} onClick={()=>{setCurrentUser(null); lsSet('nai_current_user', null); setShowProfile(false); setStage('upload');}}>{t.logout}</button>
+                  <button className="btn-upload" style={{width:'100%', margin:0, padding:'1rem'}} onClick={handleLogout}>{t.logout}</button>
                 </div>
               )}
 
@@ -652,39 +705,52 @@ export default function App() {
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'3.2rem', textAlign:'center', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.3))'}}>Oracle Store</h2>
               <p style={{color:'#fff', opacity:0.8, marginBottom:'3rem', textAlign:'center', fontSize:'1.1rem'}}>Invest in your cosmic destiny.</p>
               
-              <div className="store-grid" style={{gap:'1.5rem', gridTemplateColumns:'repeat(3, 1fr)'}}>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'₺20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.9))'}}>
-                    <h3 className="title-font" style={{color:'#EAEAEA', fontSize:'1.3rem'}}>{t.storeBasic}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#D4AF37'}}>₺20</div>
-                    <ul style={{fontSize:'0.85rem'}}><li>{t.storeFeatures?.b[0]}</li><li>{t.storeFeatures?.b[1]}</li><li>{t.storeFeatures?.b[2]}</li></ul>
+              <div className="store-grid" style={{gap:'1.5rem', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', padding:'1rem'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'₺20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.95))', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeBasic}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.b}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺20</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.b[0]}</li><li>{t.storeFeatures?.b[1]}</li><li>{t.storeFeatures?.b[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.5), rgba(0,0,0,0.9))', borderColor:'rgba(0,180,80,0.3)'}}>
-                    <h3 className="title-font" style={{color:'#6ee7b7', fontSize:'1.3rem'}}>{t.storeCareer}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#6ee7b7'}}>₺80</div>
-                    <ul style={{fontSize:'0.85rem'}}><li>{t.storeFeatures?.c[0]}</li><li>{t.storeFeatures?.c[1]}</li><li>{t.storeFeatures?.c[2]}</li></ul>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.4), rgba(0,0,0,0.95))', borderColor:'rgba(0,180,80,0.3)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#6ee7b7', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeCareer}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.c}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(0,180,80,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.c[0]}</li><li>{t.storeFeatures?.c[1]}</li><li>{t.storeFeatures?.c[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'₺50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,0,0,0.9))', borderColor:'rgba(212,175,55,0.3)'}}>
-                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.3rem'}}>{t.storeSupreme}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#D4AF37'}}>₺50</div>
-                    <ul style={{fontSize:'0.85rem'}}><li>{t.storeFeatures?.s[0]}</li><li>{t.storeFeatures?.s[1]}</li><li>{t.storeFeatures?.s[2]}</li></ul>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'₺50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.05), rgba(0,0,0,0.95))', borderColor:'rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeSupreme}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.s}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺50</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.s[0]}</li><li>{t.storeFeatures?.s[1]}</li><li>{t.storeFeatures?.s[2]}</li></ul>
                  </div>
                  
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.5), rgba(0,0,0,0.9))', borderColor:'rgba(200,50,100,0.3)'}}>
-                    <h3 className="title-font" style={{color:'#f9a8d4', fontSize:'1.3rem'}}>{t.storeLove}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#f9a8d4'}}>₺80</div>
-                    <ul style={{fontSize:'0.85rem'}}><li>{t.storeFeatures?.l[0]}</li><li>{t.storeFeatures?.l[1]}</li><li>{t.storeFeatures?.l[2]}</li></ul>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.3), rgba(0,0,0,0.95))', borderColor:'rgba(200,50,100,0.3)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#f9a8d4', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeLove}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.l}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(200,50,100,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.l[0]}</li><li>{t.storeFeatures?.l[1]}</li><li>{t.storeFeatures?.l[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'₺99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.15), rgba(20,15,10,0.9))', borderColor:'#FFDF73'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'₺99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.1), rgba(20,15,10,0.95))', borderColor:'rgba(255,223,115,0.4)', minHeight:'200px'}}>
                     <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>✦</div>
-                    <h3 className="title-font" style={{color:'#FFDF73', fontSize:'1.3rem'}}>{t.storePremium}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#FFDF73'}}>₺99 / mo</div>
-                    <ul style={{fontSize:'0.85rem', color:'#fff'}}><li>{t.storeFeatures?.p[0]}</li><li>{t.storeFeatures?.p[1]}</li><li>{t.storeFeatures?.p[2]}</li></ul>
+                    <h3 className="title-font" style={{color:'#FFDF73', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremium}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.p}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(255,223,115,0.2)', paddingBottom:'0.5rem'}}>₺99 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.p[0]}</li><li>{t.storeFeatures?.p[1]}</li><li>{t.storeFeatures?.p[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.25), rgba(0,0,0,0.8))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storePremiumExtra, price:'₺169 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,20,40,0.95))', borderColor:'#80BFFF', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>⚡</div>
+                    <h3 className="title-font" style={{color:'#80BFFF', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremiumExtra}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.pe}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>₺169 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.pe[0]}</li><li>{t.storeFeatures?.pe[1]}</li><li>{t.storeFeatures?.pe[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
                     <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>✨</div>
-                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.3rem'}}>{t.storeElite}</h3>
-                    <div style={{fontWeight:600, fontSize:'1.1rem', margin:'0.8rem 0', color:'#D4AF37'}}>₺249 / mo</div>
-                    <ul style={{fontSize:'0.85rem', color:'#fff'}}><li>{t.storeFeatures?.e[0]}</li><li>{t.storeFeatures?.e[1]}</li><li>{t.storeFeatures?.e[2]}</li></ul>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeElite}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.e}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺249 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.e[0]}</li><li>{t.storeFeatures?.e[1]}</li><li>{t.storeFeatures?.e[2]}</li></ul>
                  </div>
               </div>
            </div>
@@ -754,7 +820,7 @@ export default function App() {
                                 <div>
                                   <strong style={{fontSize:'1.1rem', color:'#fff', marginRight:'1rem'}}>{u.username}</strong>
                                   <code style={{color:'#D4AF37', background:'rgba(212,175,55,0.1)', padding:'0.2rem 0.6rem', borderRadius:'6px', fontSize:'0.85rem', marginRight:'1.5rem'}}>{u.pass}</code>
-                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier.toUpperCase()}</span>
+                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
                                   {u.isBanned && <span style={{color:'#ff4d4d', marginLeft:'1rem', fontWeight:600}}>{t.suspendedBadge}</span>}
                                 </div>
                                 <div style={{opacity: 0.5, transform: selectedUserId === u.id ? 'rotate(180deg)' : 'none', transition: '0.3s'}}>▼</div>
@@ -878,6 +944,29 @@ export default function App() {
                                    <span style={{opacity:0.6}}>{msg.date}</span>
                                  </div>
                                  <div className="content">{msg.text}</div>
+                                 <div style={{marginTop:'1.5rem', padding:'1rem', background:'rgba(0,0,0,0.2)', borderRadius:'12px', border:'1px solid rgba(212,175,55,0.1)'}}>
+                                    <div style={{color:'#D4AF37', fontSize:'0.75rem', marginBottom:'0.8rem', fontWeight:700, textTransform:'uppercase'}}>Cevap Yaz</div>
+                                    <div style={{display:'flex', gap:'1rem'}}>
+                                       <textarea 
+                                         value={adminReplyInput[msg.id] || ''} 
+                                         onChange={e => setAdminReplyInput({...adminReplyInput, [msg.id]: e.target.value})}
+                                         placeholder="Yanıtınızı buraya yazın..."
+                                         style={{flex:1, background:'rgba(0,0,0,0.5)', color:'#fff', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'10px', padding:'0.8rem', outline:'none', fontSize:'0.9rem', minHeight:'60px', resize:'vertical'}}
+                                       />
+                                       <button 
+                                         onClick={() => handleAdminReply(msg.id)}
+                                         className="btn-upload" 
+                                         style={{margin:0, width:'100px', height:'auto', padding:'0.5rem', fontSize:'0.85rem'}}
+                                       >
+                                         Gönder
+                                       </button>
+                                    </div>
+                                    {msg.adminReply && (
+                                      <div style={{marginTop:'1rem', color:'#0f0', fontSize:'0.85rem', background:'rgba(0,255,0,0.05)', padding:'0.5rem', borderRadius:'8px', borderLeft:'3px solid #0f0'}}>
+                                        <strong>Gönderilen Yanıt:</strong> {msg.adminReply}
+                                      </div>
+                                    )}
+                                 </div>
                               </div>
                             );
                           })}
