@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
 import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
@@ -55,7 +55,7 @@ export default function App() {
   const [users, setUsers] = useState<User[]>(() => {
     const saved = lsGet('nai_users', []);
     if (saved.length < 50) {
-      const botNames = ['Alperen','Buse','Cihan','Derya','Emir','Funda','GÃ¶khan','Hande','Ä°brahim','Jale','Kaan','Leman','Murat','Nalan','Okan','Pelin','RÄ±fat','Selin','Tarik','Ufuk','Vildan','Yasin','Zehra','Burak','Merve','Sertan','Elif','Onur','Deniz','Ege','Ä°rem','Arda','Seda','Mert','YaÄŸmur','YiÄŸit','Melis','Can','AslÄ±','Batuhan','Dila','Enes','GÃ¶zde','Furkan','KÃ¼bra','OÄŸuz','TuÄŸba','Yunus','Sibel','Tolga'];
+      const botNames = ['Alperen','Buse','Cihan','Derya','Emir','Funda','Gökhan','Hande','İbrahim','Jale','Kaan','Leman','Murat','Nalan','Okan','Pelin','Rıfat','Selin','Tarik','Ufuk','Vildan','Yasin','Zehra','Burak','Merve','Sertan','Elif','Onur','Deniz','Ege','İrem','Arda','Seda','Mert','Yağmur','Yiğit','Melis','Can','Aslı','Batuhan','Dila','Enes','Gözde','Furkan','Kübra','Oğuz','Tuğba','Yunus','Sibel','Tolga'];
       const bots: User[] = botNames.map((name, i) => ({
         id: `bot_${i}`,
         username: `${name}${Math.floor(Math.random()*999)}`,
@@ -93,36 +93,36 @@ export default function App() {
   const [reviews, setReviews] = useState<any[]>(() => {
     const saved = lsGet('nai_reviews', null);
     const defaults = [
-      { id: 'r1', name: 'Zeynep B.', stars: 5, text: 'Bu fal taramasÄ± beni gerÃ§ekten derinden etkiledi. Kariyer konusundaki tespitler birebir Ã§Ä±ktÄ±, inanamadÄ±m.' },
-      { id: 'r2', name: 'Can D.', stars: 5, text: 'Nokta atÄ±ÅŸÄ± tespitler. Kariyer analizine hayran kaldÄ±m, anlattÄ±klarÄ±nÄ±n yarÄ±sÄ± o hafta gerÃ§ekleÅŸti.' },
-      { id: 'r3', name: 'AyÅŸe Y.', stars: 5, text: 'AÅŸk uyumu sonuÃ§larÄ± tam olarak hislerimi yansÄ±ttÄ±. ArkadaÅŸlarÄ±ma da Ã¶nerdim.' },
-      { id: 'r4', name: 'Mert K.', stars: 5, text: 'Premium paket kesinlikle fiyatÄ±nÄ± hak ediyor. Ã‡ok detaylÄ± ve Ã¶zgÃ¼n bir analiz.' },
-      { id: 'r5', name: 'Elif S.', stars: 5, text: 'Her seferinde farklÄ± bir yorum Ã§Ä±kÄ±yor, hiÃ§ tekrar etmiyor. Ã‡ok etkileyici.' },
-      { id: 'r6', name: 'Hasan T.', stars: 5, text: 'Ä°ÅŸ hayatÄ±mda bÃ¼yÃ¼k bir karar arifesinde taratmÄ±ÅŸtÄ±m, sÃ¶ylenenler tuttu. TeÅŸekkÃ¼rler.' },
-      { id: 'r7', name: 'Merve A.', stars: 5, text: 'Animasyonlar ve arayÃ¼z Ã§ok lÃ¼ks. BeklediÄŸimden Ã§ok daha profesyonel bir deneyim.' },
-      { id: 'r8', name: 'Cem Ã–.', stars: 5, text: 'FincanÄ±mdaki semboller Ã§ok net aÃ§Ä±klandÄ±. Ejderha ve AltÄ±n Anahtar tam benim durumumu Ã¶zetledi.' },
-      { id: 'r9', name: 'Selin R.', stars: 5, text: 'Gece modu inanÄ±lmaz gÃ¼zel. Yatmadan Ã¶nce her gÃ¼n bakÄ±yorum artÄ±k.' },
-      { id: 'r10', name: 'Burak Y.', stars: 5, text: 'Daha Ã¶nce birÃ§ok fal sitesi denedim ama bu kadar gerÃ§ekÃ§i bir analiz gÃ¶rmedim.' },
-      { id: 'r11', name: 'Fatma C.', stars: 5, text: 'Anneme de aÃ§tÄ±m, o da bayÄ±ldÄ±. Ä°ki nesil birlikte kullanabiliyoruz.' },
-      { id: 'r12', name: 'Alper D.', stars: 5, text: 'Åans sayÄ±larÄ± bÃ¶lÃ¼mÃ¼ sÃ¼per. O haftaki Ã¶nemli toplantÄ± tarihime denk gelmesi tesadÃ¼f olamaz.' },
-      { id: 'r13', name: 'Neslihan K.', stars: 5, text: 'FincanÄ±mÄ± yÃ¼kledikten sonra sadece 3 saniyede analiz yaptÄ± ve sonuÃ§ harika Ã§Ä±ktÄ±.' },
-      { id: 'r14', name: 'Kemal B.', stars: 5, text: 'Oracle Elite paketi aldÄ±m, sÄ±nÄ±rsÄ±z kredi gerÃ§ekten harika. Herkese tavsiye.' },
-      { id: 'r15', name: 'Derya M.', stars: 5, text: 'BirkaÃ§ hafta Ã¶nce taratmÄ±ÅŸtÄ±m, sÃ¶ylenen birkaÃ§ ÅŸey birer birer gerÃ§ekleÅŸiyor.' },
-      { id: 'r16', name: 'Tolga Å.', stars: 5, text: 'Analiz metni her seferinde deÄŸiÅŸiyor, aynÄ± fincanla iki kez deneledim, farklÄ± Ã§Ä±ktÄ±. Ã‡ok zekice.' },
-      { id: 'r17', name: 'Gizem F.', stars: 5, text: 'Yorumlar bÃ¶lÃ¼mÃ¼ne ben de yazmak istedim. GerÃ§ekten etkileyici bir platform.' },
-      { id: 'r18', name: 'Serkan U.', stars: 5, text: 'TasarÄ±m mÃ¼kemmel, hiÃ§ bu kadar ÅŸÄ±k bir fal uygulamasÄ± gÃ¶rmemiÅŸtim. DevamÄ± gelsin.' },
-      { id: 'r19', name: 'PÄ±nar E.', stars: 5, text: 'ArkadaÅŸ grubumuzda paylaÅŸtÄ±m, hepimiz baÄŸÄ±mlÄ± olduk. Harika bir uygulama.' },
-      { id: 'r20', name: 'Emre Ã‡.', stars: 5, text: 'YZ destekli olmasÄ± gÃ¼ven veriyor. Sahte deÄŸil, gerÃ§ekten fotoÄŸrafÄ± analiz ediyor.' },
-      { id: 'r21', name: 'Selinay V.', stars: 5, text: 'Ä°nanÄ±lmaz bir deneyim, her sabah kahvemi iÃ§tikten sonra ilk iÅŸim buraya gelmek.' },
-      { id: 'r22', name: 'Kerem O.', stars: 4, text: 'Analizler Ã§ok baÅŸarÄ±lÄ±, sadece bazen biraz bekletiyor ama deÄŸiyor.' },
-      { id: 'r23', name: 'Damla L.', stars: 5, text: 'Aura analizi bÃ¶lÃ¼mÃ¼ Ã§ok etkileyici. Renkler ve anlamlarÄ± tam beni Ã¶zetliyor.' },
-      { id: 'r24', name: 'Murat G.', stars: 5, text: 'Premium Extra aldÄ±m, sÄ±nÄ±rsÄ±z kredi ile her gÃ¼n 3-4 kez baktÄ±rÄ±yorum.' },
-      { id: 'r25', name: 'Ece N.', stars: 5, text: 'GÃ¶rsellik ve kullanÄ±cÄ± deneyimi muazzam. LÃ¼ks hissini sonuna kadar alÄ±yorsunuz.' },
-      { id: 'r26', name: 'Deniz S.', stars: 4, text: 'Fal yorumlarÄ± Ã§ok derinlemesine. DiÄŸer uygulamalar gibi yÃ¼zeysel deÄŸil.' },
-      { id: 'r27', name: 'OÄŸuzhan K.', stars: 5, text: 'HaftalÄ±k burÃ§ yorumlarÄ±yla birleÅŸince tadÄ±ndan yenmiyor.' },
-      { id: 'r28', name: 'Yaren Z.', stars: 5, text: 'ÅanslÄ± numaralarÄ±m ile piyango bileti aldÄ±m, bakalÄ±m ne olacak. :))' },
-      { id: 'r29', name: 'Bora A.', stars: 5, text: 'Sistem gerÃ§ekten fotoÄŸrafÄ± analiz ediyor, sallamasyon deÄŸil. Test ettim onayladÄ±m.' },
-      { id: 'r30', name: 'AslÄ±han T.', stars: 5, text: 'Mistik hava Ã§ok iyi yansÄ±tÄ±lmÄ±ÅŸ. TeÅŸekkÃ¼rler NAI Oracle.' },
+      { id: 'r1', name: 'Zeynep B.', stars: 5, text: 'Bu fal taraması beni gerçekten derinden etkiledi. Kariyer konusundaki tespitler birebir çıktı, inanamadım.' },
+      { id: 'r2', name: 'Can D.', stars: 5, text: 'Nokta atışı tespitler. Kariyer analizine hayran kaldım, anlattıklarının yarısı o hafta gerçekleşti.' },
+      { id: 'r3', name: 'Ayşe Y.', stars: 5, text: 'Aşk uyumu sonuçları tam olarak hislerimi yansıttı. Arkadaşlarıma da önerdim.' },
+      { id: 'r4', name: 'Mert K.', stars: 5, text: 'Premium paket kesinlikle fiyatını hak ediyor. Çok detaylı ve özgün bir analiz.' },
+      { id: 'r5', name: 'Elif S.', stars: 5, text: 'Her seferinde farklı bir yorum çıkıyor, hiç tekrar etmiyor. Çok etkileyici.' },
+      { id: 'r6', name: 'Hasan T.', stars: 5, text: 'İş hayatımda büyük bir karar arifesinde taratmıştım, söylenenler tuttu. Teşekkürler.' },
+      { id: 'r7', name: 'Merve A.', stars: 5, text: 'Animasyonlar ve arayüz çok lüks. Beklediğimden çok daha profesyonel bir deneyim.' },
+      { id: 'r8', name: 'Cem Ö.', stars: 5, text: 'Fincanımdaki semboller çok net açıklandı. Ejderha ve Altın Anahtar tam benim durumumu özetledi.' },
+      { id: 'r9', name: 'Selin R.', stars: 5, text: 'Gece modu inanılmaz güzel. Yatmadan önce her gün bakıyorum artık.' },
+      { id: 'r10', name: 'Burak Y.', stars: 5, text: 'Daha önce birçok fal sitesi denedim ama bu kadar gerçekçi bir analiz görmedim.' },
+      { id: 'r11', name: 'Fatma C.', stars: 5, text: 'Anneme de açtım, o da bayıldı. İki nesil birlikte kullanabiliyoruz.' },
+      { id: 'r12', name: 'Alper D.', stars: 5, text: 'Şans sayıları bölümü süper. O haftaki önemli toplantı tarihime denk gelmesi tesadüf olamaz.' },
+      { id: 'r13', name: 'Neslihan K.', stars: 5, text: 'Fincanımı yükledikten sonra sadece 3 saniyede analiz yaptı ve sonuç harika çıktı.' },
+      { id: 'r14', name: 'Kemal B.', stars: 5, text: 'Oracle Elite paketi aldım, sınırsız kredi gerçekten harika. Herkese tavsiye.' },
+      { id: 'r15', name: 'Derya M.', stars: 5, text: 'Birkaç hafta önce taratmıştım, söylenen birkaç şey birer birer gerçekleşiyor.' },
+      { id: 'r16', name: 'Tolga Ş.', stars: 5, text: 'Analiz metni her seferinde değişiyor, aynı fincanla iki kez deneledim, farklı çıktı. Çok zekice.' },
+      { id: 'r17', name: 'Gizem F.', stars: 5, text: 'Yorumlar bölümüne ben de yazmak istedim. Gerçekten etkileyici bir platform.' },
+      { id: 'r18', name: 'Serkan U.', stars: 5, text: 'Tasarım mükemmel, hiç bu kadar şık bir fal uygulaması görmemiştim. Devamı gelsin.' },
+      { id: 'r19', name: 'Pınar E.', stars: 5, text: 'Arkadaş grubumuzda paylaştım, hepimiz bağımlı olduk. Harika bir uygulama.' },
+      { id: 'r20', name: 'Emre Ç.', stars: 5, text: 'YZ destekli olması güven veriyor. Sahte değil, gerçekten fotoğrafı analiz ediyor.' },
+      { id: 'r21', name: 'Selinay V.', stars: 5, text: 'İnanılmaz bir deneyim, her sabah kahvemi içtikten sonra ilk işim buraya gelmek.' },
+      { id: 'r22', name: 'Kerem O.', stars: 4, text: 'Analizler çok başarılı, sadece bazen biraz bekletiyor ama değiyor.' },
+      { id: 'r23', name: 'Damla L.', stars: 5, text: 'Aura analizi bölümü çok etkileyici. Renkler ve anlamları tam beni özetliyor.' },
+      { id: 'r24', name: 'Murat G.', stars: 5, text: 'Premium Extra aldım, sınırsız kredi ile her gün 3-4 kez baktırıyorum.' },
+      { id: 'r25', name: 'Ece N.', stars: 5, text: 'Görsellik ve kullanıcı deneyimi muazzam. Lüks hissini sonuna kadar alıyorsunuz.' },
+      { id: 'r26', name: 'Deniz S.', stars: 4, text: 'Fal yorumları çok derinlemesine. Diğer uygulamalar gibi yüzeysel değil.' },
+      { id: 'r27', name: 'Oğuzhan K.', stars: 5, text: 'Haftalık burç yorumlarıyla birleşince tadından yenmiyor.' },
+      { id: 'r28', name: 'Yaren Z.', stars: 5, text: 'Şanslı numaralarım ile piyango bileti aldım, bakalım ne olacak. :))' },
+      { id: 'r29', name: 'Bora A.', stars: 5, text: 'Sistem gerçekten fotoğrafı analiz ediyor, sallamasyon değil. Test ettim onayladım.' },
+      { id: 'r30', name: 'Aslıhan T.', stars: 5, text: 'Mistik hava çok iyi yansıtılmış. Teşekkürler NAI Oracle.' },
     ];
     // Ensure saved reviews always have IDs
     if (saved && Array.isArray(saved)) {
@@ -206,7 +206,7 @@ export default function App() {
     setShowAdmin(false);
     setShowProfile(false);
     setStage('upload');
-    addToast(t.logout || 'Ã‡Ä±kÄ±ÅŸ YapÄ±ldÄ±');
+    addToast(t.logout || 'Çıkış Yapıldı');
   };
 
   const handleAuth = () => {
@@ -261,7 +261,7 @@ export default function App() {
 
           setStage('upload');
           if (strikes >= 3) {
-            // Banned â€” will auto-redirect to banned screen
+            // Banned — will auto-redirect to banned screen
             addToast(t.errNotCoffee(0, validation.confidence), 'error');
           } else {
             setError(t.errNotCoffee(remaining, validation.confidence));
@@ -390,7 +390,7 @@ export default function App() {
          <div className="info-list">
             {randomFactIndices.map((idx, index) => (
               <div key={`${idx}-${index}`} className="info-item">
-                <div className="info-icon">âœ¦</div>
+                <div className="info-icon">✦</div>
                 <div className="info-text">{factArray[idx]}</div>
               </div>
             ))}
@@ -448,14 +448,14 @@ export default function App() {
           <nav className="top-bar" style={{justifyContent: 'center', gap: '0.8rem'}}>
              <div style={{position:'relative'}}>
                 <div className="nav-btn-uniform" onClick={()=>setShowLangDropdown(!showLangDropdown)}>
-                   <span className="icon">ğŸŒ</span>
-                   <span>{lang.toUpperCase()} â–¼</span>
+                   <span className="icon">🌐</span>
+                   <span>{lang.toUpperCase()} ▼</span>
                 </div>
                 {showLangDropdown && (
                   <div style={{position:'absolute', top:'110%', left:0, background:'rgba(0,0,0,0.9)', border:'1px solid var(--gold-accent)', borderRadius:'12px', overflow:'hidden', display:'flex', flexDirection:'column', zIndex:100, minWidth:'140px', boxShadow:'0 10px 30px rgba(0,0,0,0.5)', backdropFilter:'blur(10px)'}}>
                     {['tr','en','es','ru','ar'].map(l => (
                       <button key={l} onClick={()=>{setLang(l as LangCode); setShowLangDropdown(false);}} style={{padding:'0.8rem 1.2rem', background:lang===l?'rgba(212,175,55,0.1)':'transparent', color:lang===l?'#D4AF37':'#fff', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', fontWeight:lang===l?700:400, transition:'0.2s'}}>
-                        {l === 'tr' ? 'ğŸ‡¹ğŸ‡· TÃ¼rkÃ§e' : l === 'en' ? 'ğŸ‡¬ğŸ‡§ English' : l === 'es' ? 'ğŸ‡ªğŸ‡¸ EspaÃ±ol' : l === 'ru' ? 'ğŸ‡·ğŸ‡º Ğ ÑƒÑÑĞºĞ¸Ğ¹' : 'ğŸ‡¸ğŸ‡¦ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'}
+                        {l === 'tr' ? '🇹🇷 Türkçe' : l === 'en' ? '🇬🇧 English' : l === 'es' ? '🇪🇸 Español' : l === 'ru' ? '🇷🇺 Русский' : '🇸🇦 العربية'}
                       </button>
                     ))}
                   </div>
@@ -464,39 +464,39 @@ export default function App() {
              <button className="nav-btn-uniform" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>
                 {theme === 'dark' ? (
                   <>
-                     <span className="icon">â˜€ï¸</span>
+                     <span className="icon">☀️</span>
                      <span>{t.themeLight}</span>
                   </>
                 ) : (
                   <>
-                     <span className="icon">ğŸŒ™</span>
+                     <span className="icon">🌙</span>
                      <span>{t.themeDark}</span>
                   </>
                 )}
              </button>
              {!currentUser ? (
                <button className="nav-btn-uniform" onClick={()=>setShowAuthModal(true)}>
-                 <span className="icon">ğŸ”‘</span>
+                 <span className="icon">🔑</span>
                  <span>{t.authBtn}</span>
                </button>
              ) : (
                <>
                  <button className="nav-btn-uniform" onClick={()=>{setShowDailyNote(true)}}>
-                    <span className="icon">🕯️</span>
-                    <span>{t.whisperLabel}</span>
+                   <span className="icon">🕯️</span>
+                   <span>{t.whisperLabel}</span>
                  </button>
                  <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>
-                   <span className="icon">ğŸ‘¤</span>
-                   <span>{t.profileBtn?.replace('ğŸ‘¤','').trim()}</span>
+                   <span className="icon">👤</span>
+                   <span>{t.profileBtn?.replace('👤','').trim()}</span>
                  </button>
                </>
              )}
              <button className="nav-btn-uniform" onClick={()=>setShowPremium(true)}>
-               <span className="icon">ğŸ’</span>
-               <span>{t.storeBtn?.replace('ğŸ’','').trim()}</span>
+               <span className="icon">💎</span>
+               <span>{t.storeBtn?.replace('💎','').trim()}</span>
              </button>
              <button className="nav-btn-uniform" onClick={()=>setShowAdmin(true)}>
-               <span className="icon">ğŸ›¡ï¸</span>
+               <span className="icon">🛡️</span>
                <span>Admin</span>
              </button>
           </nav>
@@ -512,7 +512,7 @@ export default function App() {
                 <div className="mood-picker">
                   {(['sad','curious','happy','excited'] as const).map(m => (
                     <button key={m} className={`mood-btn ${mood===m?'active':''}`} onClick={()=>setMood(m)}>
-                      {m === 'sad' ? 'ğŸ˜”' : m === 'curious' ? 'ğŸ¤”' : m === 'happy' ? 'ğŸ˜Š' : 'ğŸ”¥'}
+                      {m === 'sad' ? '😔' : m === 'curious' ? '🤔' : m === 'happy' ? '😊' : '🔥'}
                     </button>
                   ))}
                 </div>
@@ -547,19 +547,19 @@ export default function App() {
            {stage === 'analyzing' && (
              <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'1.5rem', width:'100%'}}>
                <div className="scanning-wrapper" style={{width:'100%', maxWidth:'600px', height:'380px', boxShadow:'0 0 60px rgba(212,175,55,0.5)', border:'2px solid rgba(212,175,55,0.6)', borderRadius:'30px'}}>
-                 {previewUrl ? <img src={previewUrl} alt="Scanning" /> : <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:'5rem', color:'rgba(212,175,55,0.3)'}}>â˜•</div>}
+                 {previewUrl ? <img src={previewUrl} alt="Scanning" /> : <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:'5rem', color:'rgba(212,175,55,0.3)'}}>☕</div>}
                  <div className="laser-beam"></div>
                </div>
                <div style={{background:'rgba(0,0,0,0.6)', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'20px', padding:'1.5rem 2.5rem', width:'100%', maxWidth:'600px', fontFamily:'monospace', backdropFilter:'blur(10px)'}}>
-                 <div style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'3px', marginBottom:'1rem', opacity:0.7}}>NAI VISION ENGINE v3.3 â€” PROCESSING</div>
+                 <div style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'3px', marginBottom:'1rem', opacity:0.7}}>NAI VISION ENGINE v3.3 — PROCESSING</div>
                  {[
-                   { phase: 'BOOT', label: 'Sistem BaÅŸlatÄ±ldÄ±', done: true },
-                   { phase: 'PIXEL_READ', label: 'Piksel Verisi Ã‡ekiliyor', done: true },
-                   { phase: 'ML_INFERENCE', label: 'Derin Ã–ÄŸrenme Aktif', done: false },
+                   { phase: 'BOOT', label: 'Sistem Başlatıldı', done: true },
+                   { phase: 'PIXEL_READ', label: 'Piksel Verisi Çekiliyor', done: true },
+                   { phase: 'ML_INFERENCE', label: 'Derin Öğrenme Aktif', done: false },
                    { phase: 'PATTERN_MATCH', label: 'Telve Deseni Analizi...', done: false },
                  ].map((s,i) => (
                    <div key={i} style={{display:'flex', alignItems:'center', gap:'1rem', marginBottom:'0.5rem', animation:`fadeUpIn 0.5s ease ${i*0.3}s both`}}>
-                     <span style={{color: s.done ? '#0f0' : '#D4AF37', fontSize:'0.8rem', minWidth:'20px'}}>{s.done ? 'âœ“' : 'â–º'}</span>
+                     <span style={{color: s.done ? '#0f0' : '#D4AF37', fontSize:'0.8rem', minWidth:'20px'}}>{s.done ? '✓' : '►'}</span>
                      <span style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'2px', opacity: s.done ? 1 : 0.6}}>[{s.phase}]</span>
                      <span style={{color:'rgba(255,255,255,0.7)', fontSize:'0.85rem'}}>{s.label}</span>
                      {!s.done && <span style={{color:'rgba(212,175,55,0.5)', animation:'blink 1s step-end infinite'}}>_</span>}
@@ -611,7 +611,7 @@ export default function App() {
                      {/* LEFT CARDS */}
                      {aiResult.highlights.slice(0, 2).map((h: any, idx: number) => (
                        <div key={idx} className="highlight-card" style={{position:'absolute', width:'220px', left:'0', top: idx === 0 ? '5%' : '52%', zIndex:8}}>
-                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>{idx===0?'ğŸ”®':'âš¡'}</div>
+                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>{idx===0?'🔮':'⚡'}</div>
                          <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{h.word}</h4>
                          <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{h.explanation_long}</p>
                        </div>
@@ -620,7 +620,7 @@ export default function App() {
                      {/* RIGHT CARD */}
                      {aiResult.highlights[2] && (
                        <div className="highlight-card" style={{position:'absolute', width:'220px', right:'0', top:'25%', zIndex:8}}>
-                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>ğŸŒ™</div>
+                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>🌙</div>
                          <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{aiResult.highlights[2].word}</h4>
                          <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{aiResult.highlights[2].explanation_long}</p>
                        </div>
@@ -648,14 +648,14 @@ export default function App() {
              <div className="reviews-scroller">
                {reviews.map((r, i) => (
                  <div key={r.id || `rv_${i}`} className="review-card">
-                   <div className="review-stars">{"â˜…".repeat(r.stars)}</div>
+                   <div className="review-stars">{"★".repeat(r.stars)}</div>
                    <div className="review-name">{r.name}</div>
                    <div className="review-text">"{r.text}"</div>
                  </div>
                ))}
                {reviews.map((r, i) => (
                  <div key={(r.id || `rv_${i}`) + '_dup'} className="review-card">
-                   <div className="review-stars">{"â˜…".repeat(r.stars)}</div>
+                   <div className="review-stars">{"★".repeat(r.stars)}</div>
                    <div className="review-name">{r.name}</div>
                    <div className="review-text">"{r.text}"</div>
                  </div>
@@ -671,7 +671,7 @@ export default function App() {
       {showProfile && currentUser && (
         <div className="modal-overlay" onClick={()=>setShowProfile(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'700px', maxHeight:'85vh'}}>
-              <button className="modal-close-btn" onClick={()=>setShowProfile(false)}>âœ•</button>
+              <button className="modal-close-btn" onClick={()=>setShowProfile(false)}>✕</button>
 
               {/* Profile Header */}
               <div style={{display:'flex', alignItems:'center', gap:'1.5rem', marginBottom:'1.5rem'}}>
@@ -681,7 +681,7 @@ export default function App() {
                 <div>
                   <div style={{fontSize:'1.4rem', fontWeight:700, color:'#EAEAEA'}}>{currentUser.username}</div>
                   <div style={{color:'#D4AF37', textTransform:'uppercase', fontSize:'0.8rem', letterSpacing:'2px'}}>
-                    {currentUser.tier === 'elite' ? t.storeElite : currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : (t.tierFree || 'Free')} â€¢ {currentUser.tier==='free' ? `${currentUser.credits} kredi` : 'âˆ kredi'}
+                    {currentUser.tier === 'elite' ? t.storeElite : currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : (t.tierFree || 'Free')} • {currentUser.tier==='free' ? `${currentUser.credits} kredi` : '∞ kredi'}
                   </div>
                 </div>
               </div>
@@ -690,7 +690,7 @@ export default function App() {
               <div style={{display:'flex', borderBottom:'1px solid rgba(212,175,55,0.2)', marginBottom:'1.5rem'}}>
                 {(['info','history','daily'] as const).map(tab => (
                   <button key={tab} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'0.8rem', background:'transparent', border:'none', borderBottom: profileTab===tab ? '2px solid #D4AF37' : '2px solid transparent', color: profileTab===tab ? '#D4AF37' : 'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:'Poppins', fontWeight:600, fontSize:'0.9rem', letterSpacing:'1px', transition:'0.3s'}}>
-                    {tab==='info' ? 'ğŸ‘¤ ' + (t.ovw||'Hesap') : tab==='history' ? `ğŸ“œ ${t.crmHistory||'GeÃ§miÅŸ'}` : 'ğŸ•¯ï¸ ' + (t.savedNotesTitle||'GÃ¼nlÃ¼k')}
+                    {tab==='info' ? '👤 ' + (t.ovw||'Hesap') : tab==='history' ? `📜 ${t.crmHistory||'Geçmiş'}` : '🕯️ ' + (t.savedNotesTitle||'Günlük')}
                   </button>
                 ))}
               </div>
@@ -721,8 +721,8 @@ export default function App() {
                 <div style={{overflowY:'auto', maxHeight:'480px', display:'flex', flexDirection:'column', gap:'1rem', paddingRight:'0.5rem'}}>
                   {pastFortunes.filter(f=>f.username===currentUser.username).length === 0 ? (
                     <div style={{textAlign:'center', padding:'3rem', opacity:0.4}}>
-                      <div style={{fontSize:'3rem', marginBottom:'1rem'}}>â˜•</div>
-                      <p>HenÃ¼z hiÃ§ fal taratmadÄ±n.</p>
+                      <div style={{fontSize:'3rem', marginBottom:'1rem'}}>☕</div>
+                      <p>Henüz hiç fal taratmadın.</p>
                     </div>
                   ) : (
                     pastFortunes.filter(f=>f.username===currentUser.username).map((fort, i) => (
@@ -732,9 +732,9 @@ export default function App() {
                         <div style={{flex:1, minWidth:0}}>
                           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.4rem'}}>
                             <span style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'1px', fontWeight:600}}>FAL #{pastFortunes.filter(f=>f.username===currentUser.username).length - i}</span>
-                            {fort.mood && <span style={{fontSize:'1.1rem'}}>{fort.mood==='sad'?'ğŸ˜”':fort.mood==='curious'?'ğŸ¤”':fort.mood==='happy'?'ğŸ˜Š':'ğŸ”¥'}</span>}
+                            {fort.mood && <span style={{fontSize:'1.1rem'}}>{fort.mood==='sad'?'😔':fort.mood==='curious'?'🤔':fort.mood==='happy'?'😊':'🔥'}</span>}
                           </div>
-                          <div style={{fontSize:'0.78rem', opacity:0.5, marginBottom:'0.5rem'}}>ğŸ• {fort.date}</div>
+                          <div style={{fontSize:'0.78rem', opacity:0.5, marginBottom:'0.5rem'}}>🕐 {fort.date}</div>
                           <div style={{display:'flex', gap:'0.4rem', flexWrap:'wrap'}}>
                             {fort.highlights?.slice(0,3).map((h:any, hi:number) => (
                               <span key={hi} style={{background:'rgba(212,175,55,0.1)', border:'1px solid rgba(212,175,55,0.2)', borderRadius:'8px', padding:'0.2rem 0.5rem', fontSize:'0.7rem', color:'#D4AF37'}}>{h.word}</span>
@@ -753,8 +753,8 @@ export default function App() {
                 <div style={{overflowY:'auto', maxHeight:'480px', display:'flex', flexDirection:'column', gap:'1rem', paddingRight:'0.5rem'}}>
                    {savedNotes.length === 0 ? (
                      <div style={{textAlign:'center', padding:'3rem', opacity:0.4}}>
-                       <div style={{fontSize:'3rem', marginBottom:'1rem'}}>ğŸ“œ</div>
-                       <p>{t.noSavedNotes || 'HenÃ¼z kaydedilmiÅŸ fÄ±sÄ±ltÄ±n yok.'}</p>
+                       <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📜</div>
+                       <p>{t.noSavedNotes || 'Henüz kaydedilmiş fısıltın yok.'}</p>
                      </div>
                    ) : (
                      savedNotes.map(n => (
@@ -777,7 +777,7 @@ export default function App() {
       {showAuthModal && (
         <div className="modal-overlay" onClick={()=>setShowAuthModal(false)}>
            <div className="fancy-modal auth-modal" onClick={e=>e.stopPropagation()}>
-              <button className="modal-close-btn" onClick={()=>setShowAuthModal(false)}>âœ•</button>
+              <button className="modal-close-btn" onClick={()=>setShowAuthModal(false)}>✕</button>
               
               <div className="auth-tabs">
                 <button className={`auth-tab ${authMode==='login'?'active':''}`} onClick={()=>setAuthMode('login')}>{t.authLogin}</button>
@@ -803,55 +803,55 @@ export default function App() {
       {showPremium && (
         <div className="modal-overlay" onClick={()=>setShowPremium(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'4rem'}}>
-              <button className="modal-close-btn" onClick={()=>setShowPremium(false)}>âœ•</button>
+              <button className="modal-close-btn" onClick={()=>setShowPremium(false)}>✕</button>
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'3.2rem', textAlign:'center', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.3))'}}>Oracle Store</h2>
               <p style={{color:'#fff', opacity:0.8, marginBottom:'3rem', textAlign:'center', fontSize:'1.1rem'}}>Invest in your cosmic destiny.</p>
               
               <div className="store-grid" style={{gap:'1.5rem', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', padding:'1rem'}}>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'â‚º20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.95))', minHeight:'200px'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'₺20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.95))', minHeight:'200px'}}>
                     <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeBasic}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.b}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>â‚º20</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺20</div>
                     <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.b[0]}</li><li>{t.storeFeatures?.b[1]}</li><li>{t.storeFeatures?.b[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'â‚º80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.4), rgba(0,0,0,0.95))', borderColor:'rgba(0,180,80,0.3)', minHeight:'200px'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.4), rgba(0,0,0,0.95))', borderColor:'rgba(0,180,80,0.3)', minHeight:'200px'}}>
                     <h3 className="title-font" style={{color:'#6ee7b7', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeCareer}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.c}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(0,180,80,0.2)', paddingBottom:'0.5rem'}}>â‚º80</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(0,180,80,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
                     <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.c[0]}</li><li>{t.storeFeatures?.c[1]}</li><li>{t.storeFeatures?.c[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'â‚º50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.05), rgba(0,0,0,0.95))', borderColor:'rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'₺50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.05), rgba(0,0,0,0.95))', borderColor:'rgba(212,175,55,0.2)', minHeight:'200px'}}>
                     <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeSupreme}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.s}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>â‚º50</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺50</div>
                     <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.s[0]}</li><li>{t.storeFeatures?.s[1]}</li><li>{t.storeFeatures?.s[2]}</li></ul>
                  </div>
                  
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'â‚º80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.3), rgba(0,0,0,0.95))', borderColor:'rgba(200,50,100,0.3)', minHeight:'200px'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.3), rgba(0,0,0,0.95))', borderColor:'rgba(200,50,100,0.3)', minHeight:'200px'}}>
                     <h3 className="title-font" style={{color:'#f9a8d4', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeLove}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.l}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(200,50,100,0.2)', paddingBottom:'0.5rem'}}>â‚º80</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(200,50,100,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
                     <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.l[0]}</li><li>{t.storeFeatures?.l[1]}</li><li>{t.storeFeatures?.l[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'â‚º99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.1), rgba(20,15,10,0.95))', borderColor:'rgba(255,223,115,0.4)', minHeight:'200px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>âœ¦</div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'₺99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.1), rgba(20,15,10,0.95))', borderColor:'rgba(255,223,115,0.4)', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>✦</div>
                     <h3 className="title-font" style={{color:'#FFDF73', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremium}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.p}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(255,223,115,0.2)', paddingBottom:'0.5rem'}}>â‚º99 / mo</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(255,223,115,0.2)', paddingBottom:'0.5rem'}}>₺99 / mo</div>
                     <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.p[0]}</li><li>{t.storeFeatures?.p[1]}</li><li>{t.storeFeatures?.p[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storePremiumExtra, price:'â‚º169 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,20,40,0.95))', borderColor:'#80BFFF', minHeight:'200px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>âš¡</div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storePremiumExtra, price:'₺169 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,20,40,0.95))', borderColor:'#80BFFF', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>⚡</div>
                     <h3 className="title-font" style={{color:'#80BFFF', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremiumExtra}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.pe}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>â‚º169 / mo</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>₺169 / mo</div>
                     <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.pe[0]}</li><li>{t.storeFeatures?.pe[1]}</li><li>{t.storeFeatures?.pe[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'elite', name:t.storeElite, price:'â‚º249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>âœ¨</div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'elite', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>✨</div>
                     <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeElite}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.e}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>â‚º249 / mo</div>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺249 / mo</div>
                     <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.e[0]}</li><li>{t.storeFeatures?.e[1]}</li><li>{t.storeFeatures?.e[2]}</li></ul>
                  </div>
               </div>
@@ -863,7 +863,7 @@ export default function App() {
         <div className="modal-overlay" onClick={()=>{setPurchasingPkg(null); setPurchasePassInput(''); setPurchaseError(null);}} style={{zIndex:100001}}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'450px', padding:'3rem', textAlign:'center'}}>
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', margin:'0 0 0.5rem 0'}}>Checkout</h2>
-              <p style={{color:'#EAEAEA', opacity:0.8, marginBottom:'2rem'}}>{purchasingPkg.name} â€” <strong>{purchasingPkg.price}</strong></p>
+              <p style={{color:'#EAEAEA', opacity:0.8, marginBottom:'2rem'}}>{purchasingPkg.name} — <strong>{purchasingPkg.price}</strong></p>
               
               <div style={{background:'rgba(0,0,0,0.3)', padding:'1.5rem', borderRadius:'15px', border:'1px solid rgba(255,255,255,0.1)', marginBottom:'2rem'}}>
                  <div style={{fontSize:'0.9rem', color:'#aaa', marginBottom:'1rem'}}>Confirm Purchase Authorization</div>
@@ -882,7 +882,7 @@ export default function App() {
       {showAdmin && (
         <div className="modal-overlay" onClick={()=>setShowAdmin(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:0, height:'85vh'}}>
-               <button className="modal-close-btn" onClick={()=>setShowAdmin(false)}>âœ•</button>
+               <button className="modal-close-btn" onClick={()=>setShowAdmin(false)}>✕</button>
                {!isAdminUnlocked ? (
                  <div className="admin-lock">
                     <div className="mystic-ring" style={{width:'180px', height:'180px', opacity:0.3}}></div>
@@ -890,7 +890,7 @@ export default function App() {
                     <LockIcon className="lock-ping" />
                     <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.5rem', letterSpacing:'8px', textTransform:'uppercase', marginTop:'1rem', textShadow:'0 0 20px rgba(212,175,55,0.4)'}}>{t.adminGatewayTitle}</h2>
                     <div style={{color:'rgba(255,255,255,0.4)', fontSize:'0.9rem', marginBottom:'-0.5rem', letterSpacing:'2px'}}>{t.adminGatewayPass.toUpperCase()}</div>
-                    <input id="adminPassInput" className="admin-lock-input" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" onKeyUp={e => e.key==='Enter' && (e.currentTarget.value==='010409'?setIsAdminUnlocked(true):addToast('Access Denied','error'))} />
+                    <input id="adminPassInput" className="admin-lock-input" type="password" placeholder="••••••" onKeyUp={e => e.key==='Enter' && (e.currentTarget.value==='010409'?setIsAdminUnlocked(true):addToast('Access Denied','error'))} />
                     <button className="btn-upload" style={{marginTop:'1.5rem', padding:'1rem 4rem', fontSize:'1.1rem', background:'linear-gradient(45deg, #8B6B3F, #D4AF37)'}} onClick={()=>{
                       const inp = document.getElementById('adminPassInput') as HTMLInputElement;
                       if(inp && inp.value==='010409') setIsAdminUnlocked(true); else addToast('Access Denied','error');
@@ -925,10 +925,10 @@ export default function App() {
                                 <div>
                                   <strong style={{fontSize:'1.1rem', color:'#fff', marginRight:'1rem'}}>{u.username}</strong>
                                   <code style={{color:'#D4AF37', background:'rgba(212,175,55,0.1)', padding:'0.2rem 0.6rem', borderRadius:'6px', fontSize:'0.85rem', marginRight:'1.5rem'}}>{u.pass}</code>
-                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> â€¢ <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'elite' ? t.storeElite : u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
+                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'elite' ? t.storeElite : u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
                                   {u.isBanned && <span style={{color:'#ff4d4d', marginLeft:'1rem', fontWeight:600}}>{t.suspendedBadge}</span>}
                                 </div>
-                                <div style={{opacity: 0.5, transform: selectedUserId === u.id ? 'rotate(180deg)' : 'none', transition: '0.3s'}}>â–¼</div>
+                                <div style={{opacity: 0.5, transform: selectedUserId === u.id ? 'rotate(180deg)' : 'none', transition: '0.3s'}}>▼</div>
                               </div>
                               
                               {selectedUserId === u.id && (
@@ -1043,7 +1043,7 @@ export default function App() {
                                           className="text-btn" 
                                           style={{background:'rgba(212,175,55,0.2)', color:'#D4AF37', border:'1px solid #D4AF37', padding:'0.3rem 0.8rem', fontSize:'0.75rem'}}
                                         >
-                                          BanÄ± KaldÄ±r
+                                          Banı Kaldır
                                         </button>
                                       )}
                                    </div>
@@ -1056,7 +1056,7 @@ export default function App() {
                                        <textarea 
                                          value={adminReplyInput[msg.id] || ''} 
                                          onChange={e => setAdminReplyInput({...adminReplyInput, [msg.id]: e.target.value})}
-                                         placeholder="YanÄ±tÄ±nÄ±zÄ± buraya yazÄ±n..."
+                                         placeholder="Yanıtınızı buraya yazın..."
                                          style={{flex:1, background:'rgba(0,0,0,0.5)', color:'#fff', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'10px', padding:'0.8rem', outline:'none', fontSize:'0.9rem', minHeight:'60px', resize:'vertical'}}
                                        />
                                        <button 
@@ -1064,12 +1064,12 @@ export default function App() {
                                          className="btn-upload" 
                                          style={{margin:0, width:'100px', height:'auto', padding:'0.5rem', fontSize:'0.85rem'}}
                                        >
-                                         GÃ¶nder
+                                         Gönder
                                        </button>
                                     </div>
                                     {msg.adminReply && (
                                       <div style={{marginTop:'1rem', color:'#0f0', fontSize:'0.85rem', background:'rgba(0,255,0,0.05)', padding:'0.5rem', borderRadius:'8px', borderLeft:'3px solid #0f0'}}>
-                                        <strong>GÃ¶nderilen YanÄ±t:</strong> {msg.adminReply}
+                                        <strong>Gönderilen Yanıt:</strong> {msg.adminReply}
                                       </div>
                                     )}
                                  </div>
@@ -1099,9 +1099,9 @@ export default function App() {
       {showReviewModal && (
         <div className="modal-overlay" style={{zIndex: 1000000}} onClick={()=>setShowReviewModal(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'3rem', maxWidth:'450px', background:'linear-gradient(160deg, #1a1a1a, #0a0a0a)', border:'1px solid rgba(212,175,55,0.4)', borderRadius:'30px', boxShadow:'0 20px 50px rgba(0,0,0,0.8)'}}>
-              <button className="modal-close-btn" onClick={()=>setShowReviewModal(false)}>âœ•</button>
+              <button className="modal-close-btn" onClick={()=>setShowReviewModal(false)}>✕</button>
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem', textAlign:'center', textShadow:'0 0 15px rgba(212,175,55,0.3)'}}>{t.writeReviewBtn}</h2>
-              <p style={{color:'rgba(255,255,255,0.6)', textAlign:'center', marginBottom:'2rem', fontSize:'0.9rem'}}>Deneyimini toplulukla paylaÅŸ.</p>
+              <p style={{color:'rgba(255,255,255,0.6)', textAlign:'center', marginBottom:'2rem', fontSize:'0.9rem'}}>Deneyimini toplulukla paylaş.</p>
               
               <div className="review-stars-input">
                  {[1,2,3,4,5].map(s => (
@@ -1111,7 +1111,7 @@ export default function App() {
                     className={`star-input ${reviewInput.stars >= s ? 'active' : ''}`}
                     style={{color: reviewInput.stars >= s ? '#FFDF73' : 'rgba(255,255,255,0.1)'}}
                    >
-                    â˜…
+                    ★
                    </span>
                  ))}
               </div>
@@ -1137,13 +1137,13 @@ export default function App() {
       {showDailyNote && (
         <div className="modal-overlay" onClick={()=>setShowDailyNote(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px', textAlign:'center', padding:'4rem 3rem'}}>
-              <button className="modal-close-btn" onClick={()=>setShowDailyNote(false)}>âœ•</button>
-              <div style={{fontSize:'4rem', marginBottom:'1.5rem', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.4))'}}>ğŸ•¯ï¸</div>
+              <button className="modal-close-btn" onClick={()=>setShowDailyNote(false)}>✕</button>
+              <div style={{fontSize:'4rem', marginBottom:'1.5rem', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.4))'}}>🕯️</div>
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem'}}>{t.dailyNoteTitle}</h2>
               <div style={{height:'1px', background:'linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)', margin:'1.5rem 0'}}></div>
               
               <div style={{background:'rgba(212,175,55,0.03)', padding:'2rem', borderRadius:'25px', border:'1px solid rgba(212,175,55,0.15)', marginBottom:'2.5rem', position:'relative', overflow:'hidden'}}>
-                 <div style={{position:'absolute', top:0, left:0, fontSize:'3rem', opacity:0.05}}>â</div>
+                 <div style={{position:'absolute', top:0, left:0, fontSize:'3rem', opacity:0.05}}>❝</div>
                  <p style={{fontSize:'1.1rem', color:'#EAEAEA', lineHeight:1.8, fontStyle:'italic', margin:0, position:'relative', zIndex:1}}>
                    {getDailyWhisper()}
                  </p>
