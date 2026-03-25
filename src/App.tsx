@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
-import { content, coffeeFactsGlobal } from './data/locale'
+import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
 import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
@@ -26,9 +26,11 @@ const CoffeeIcon = () => (
   </svg>
 );
 
-const LockIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6-5c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3z"/>
+const LockIcon = ({className=''}:{className?:string}) => (
+  <svg className={className} width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 17V15" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="5" y="11" width="14" height="10" rx="2" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7V11" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -75,7 +77,7 @@ export default function App() {
 
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [profileTab, setProfileTab] = useState<'info'|'history'>('info');
+  const [profileTab, setProfileTab] = useState<'info' | 'history' | 'daily'>('info');
   const [purchasingPkg, setPurchasingPkg] = useState<{ amount: number; tier: Tier; name: string; price: string } | null>(null);
   const [purchasePassInput, setPurchasePassInput] = useState('');
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
@@ -136,6 +138,8 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [adminTab, setAdminTab] = useState<'users' | 'fortunes' | 'messages' | 'logs'>('users');
+  const [showDailyNote, setShowDailyNote] = useState(false);
+  const [savedNotes, setSavedNotes] = useState<{id:string, date:string, text:string}[]>(() => lsGet('nai_saved_notes', []));
   const [selectedUserId, setSelectedUserId] = useState<string|null>(null);
   const [pastFortunes, setPastFortunes] = useState<PastFortune[]>(() => lsGet('nai_fortunes', []));
   const [supportMessages, setSupportMessages] = useState<SupportMsg[]>(() => lsGet('nai_messages', []));
@@ -180,6 +184,7 @@ export default function App() {
   useEffect(() => { lsSet('nai_messages', supportMessages); }, [supportMessages]);
   useEffect(() => { lsSet('nai_logs', logs); }, [logs]);
   useEffect(() => { lsSet('nai_reviews', reviews); }, [reviews]);
+  useEffect(() => { lsSet('nai_saved_notes', savedNotes); }, [savedNotes]);
 
   const updateCurrentUser = (fn: (u: User) => User) => {
     if (!currentUser) return;
@@ -213,13 +218,13 @@ export default function App() {
       setUsers(prev => [...prev, neu]);
       setCurrentUser(neu);
       addLog(`New User Registered: ${neu.username}`);
-      addToast(t.toastWelcome?.replace('{u}', neu.username) || `Welcome, ${neu.username}`);
+      addToast(t.toastWelcome.replace('{u}', neu.username));
     } else {
       const u = users.find(x => x.username === authInp.user && x.pass === authInp.pass);
       if (!u) { setAuthError(t.errWrongCreds); return; }
       setCurrentUser(u);
       addLog(`User Logged In: ${u.username}`);
-      addToast(t.toastWelcome?.replace('{u}', u.username) || `Welcome back, ${u.username}`);
+      addToast(t.toastWelcome.replace('{u}', u.username));
     }
     setShowAuthModal(false); setAuthInp({user:'',pass:''});
   };
@@ -228,7 +233,7 @@ export default function App() {
     if (!currentUser) { setShowAuthModal(true); return; }
     if (!previewUrl) return setError(t.errNoImage);
     if (currentUser.credits <= 0 && currentUser.tier === 'free') return setShowPremium(true);
-    if (!mood) return setError('Mood required');
+    if (!mood) return setError(t.errMoodRequired);
 
     setError(null); setStage('analyzing');
 
@@ -286,15 +291,37 @@ export default function App() {
   };
 
   const handleStoreBuy = (amount: number, tier: Tier, name: string) => {
-    if(!currentUser) return addToast('Login required','error');
+    if(!currentUser) return addToast(t.errLoginRequired, 'error');
     updateCurrentUser(u => ({
       ...u, 
       tier: tier !== 'free' ? tier : u.tier, 
       credits: tier !== 'free' ? (tier === 'premium' ? 100 : 9999) : u.credits + amount
     }));
     addLog(`Store Purchase: ${name} by ${currentUser.username}`);
-    addToast(`${name} Processed`, 'success');
+    addToast(`${name} ${t.toastProcessed}`, 'success');
     setShowPremium(false);
+  };
+
+  const getDailyWhisper = () => {
+    const list = mysticWhispers[lang] || mysticWhispers['en'];
+    const dateStr = new Date().toISOString().split('T')[0];
+    const seed = (currentUser ? currentUser.id : 'anon') + dateStr;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    const idx = Math.abs(hash) % list.length;
+    return list[idx];
+  };
+
+  const saveDailyNote = () => {
+    if(!currentUser) return setShowAuthModal(true);
+    const whisper = getDailyWhisper();
+    if(savedNotes.some(n => n.text === whisper)) return addToast(t.toastAlreadySaved, 'error');
+    const newNote = { id: Date.now().toString(), date: new Date().toLocaleDateString(), text: whisper };
+    setSavedNotes([newNote, ...savedNotes]);
+    addToast(t.toastSaved);
   };
 
   const confirmPurchase = () => {
@@ -315,7 +342,7 @@ export default function App() {
     const nMsg = [msg, ...supportMessages];
     setSupportMessages(nMsg); lsSet('nai_messages', nMsg);
     setSupportInput('');
-    addToast('Message Sent', 'success');
+    addToast(t.toastSent, 'success');
   };
 
   const handleAdminReply = (msgId: string) => {
@@ -418,33 +445,60 @@ export default function App() {
             <div className="mystic-ring"></div>
           </div>
 
-          <nav className="top-bar">
-             <div style={{display:'flex', gap:'1rem', alignItems:'center'}}>
-                <div style={{position:'relative'}}>
-                   <div onClick={()=>setShowLangDropdown(!showLangDropdown)} style={{background:'rgba(0,0,0,0.5)', color:'#D4AF37', border:'1px solid rgba(212,175,55,0.3)', padding:'0.6rem 1rem', borderRadius:'100px', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'0.5rem', transition:'0.3s'}}>
-                      🌐 {lang.toUpperCase()} ▼
-                   </div>
-                   {showLangDropdown && (
-                     <div style={{position:'absolute', top:'110%', left:0, background:'rgba(0,0,0,0.9)', border:'1px solid var(--gold-accent)', borderRadius:'12px', overflow:'hidden', display:'flex', flexDirection:'column', zIndex:100, minWidth:'140px', boxShadow:'0 10px 30px rgba(0,0,0,0.5)', backdropFilter:'blur(10px)'}}>
-                       {['tr','en','es','ru','ar'].map(l => (
-                         <button key={l} onClick={()=>{setLang(l as LangCode); setShowLangDropdown(false);}} style={{padding:'0.8rem 1.2rem', background:lang===l?'rgba(212,175,55,0.1)':'transparent', color:lang===l?'#D4AF37':'#fff', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', fontWeight:lang===l?700:400, transition:'0.2s'}}>
-                           {l === 'tr' ? '🇹🇷 Türkçe' : l === 'en' ? '🇬🇧 English' : l === 'es' ? '🇪🇸 Español' : l === 'ru' ? '🇷🇺 Русский' : '🇸🇦 العربية'}
-                         </button>
-                       ))}
-                     </div>
-                   )}
+          <nav className="top-bar" style={{justifyContent: 'center', gap: '0.8rem'}}>
+             <div style={{position:'relative'}}>
+                <div className="nav-btn-uniform" onClick={()=>setShowLangDropdown(!showLangDropdown)}>
+                   <span className="icon">🌐</span>
+                   <span>{lang.toUpperCase()} ▼</span>
                 </div>
-                <button className="text-btn" onClick={()=>setTheme(theme==='dark'?'light':'dark')} style={{border:'1px solid rgba(212,175,55,0.3)', background:'transparent', color:'#D4AF37'}}>{theme==='dark'?t.themeLight:t.themeDark}</button>
-             </div>
-             <div style={{display:'flex', gap:'0.5rem'}}>
-                {!currentUser ? (
-                  <button className="text-btn" onClick={()=>setShowAuthModal(true)} style={{border:'1px solid rgba(212,175,55,0.3)', background:'transparent', color:'#fff'}}>{t.authBtn}</button>
-                ) : (
-                  <button className="text-btn" onClick={()=>setShowProfile(true)} style={{border:'1px solid var(--gold-accent)', background:'rgba(212,175,55,0.1)', color:'#D4AF37'}}>{t.profileBtn}</button>
+                {showLangDropdown && (
+                  <div style={{position:'absolute', top:'110%', left:0, background:'rgba(0,0,0,0.9)', border:'1px solid var(--gold-accent)', borderRadius:'12px', overflow:'hidden', display:'flex', flexDirection:'column', zIndex:100, minWidth:'140px', boxShadow:'0 10px 30px rgba(0,0,0,0.5)', backdropFilter:'blur(10px)'}}>
+                    {['tr','en','es','ru','ar'].map(l => (
+                      <button key={l} onClick={()=>{setLang(l as LangCode); setShowLangDropdown(false);}} style={{padding:'0.8rem 1.2rem', background:lang===l?'rgba(212,175,55,0.1)':'transparent', color:lang===l?'#D4AF37':'#fff', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', fontWeight:lang===l?700:400, transition:'0.2s'}}>
+                        {l === 'tr' ? '🇹🇷 Türkçe' : l === 'en' ? '🇬🇧 English' : l === 'es' ? '🇪🇸 Español' : l === 'ru' ? '🇷🇺 Русский' : '🇸🇦 العربية'}
+                      </button>
+                    ))}
+                  </div>
                 )}
-                <button className="text-btn" onClick={()=>setShowPremium(true)} style={{border:'1px solid rgba(212,175,55,0.3)', background:'transparent', color:'#fff'}}>{t.storeBtn}</button>
-                <button className="text-btn" onClick={()=>setShowAdmin(true)} style={{border:'1px solid rgba(212,175,55,0.3)', background:'transparent', color:'#fff'}}>Admin</button>
              </div>
+             <button className="nav-btn-uniform" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>
+                {theme === 'dark' ? (
+                  <>
+                     <span className="icon">☀️</span>
+                     <span>{t.themeLight}</span>
+                  </>
+                ) : (
+                  <>
+                     <span className="icon">🌙</span>
+                     <span>{t.themeDark}</span>
+                  </>
+                )}
+             </button>
+             {!currentUser ? (
+               <button className="nav-btn-uniform" onClick={()=>setShowAuthModal(true)}>
+                 <span className="icon">🔑</span>
+                 <span>{t.authBtn}</span>
+               </button>
+             ) : (
+               <>
+                 <button className="nav-btn-uniform" onClick={()=>{setShowDailyNote(true)}}>
+                   <span className="icon">🕯️</span>
+                   <span>{t.dailyNoteTitle?.split(' ')[0]}</span>
+                 </button>
+                 <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>
+                   <span className="icon">👤</span>
+                   <span>{t.profileBtn?.replace('👤','').trim()}</span>
+                 </button>
+               </>
+             )}
+             <button className="nav-btn-uniform" onClick={()=>setShowPremium(true)}>
+               <span className="icon">💎</span>
+               <span>{t.storeBtn?.replace('💎','').trim()}</span>
+             </button>
+             <button className="nav-btn-uniform" onClick={()=>setShowAdmin(true)}>
+               <span className="icon">🛡️</span>
+               <span>Admin</span>
+             </button>
           </nav>
 
           <div className="upload-container-wrapper">
@@ -634,9 +688,9 @@ export default function App() {
 
               {/* Tabs */}
               <div style={{display:'flex', borderBottom:'1px solid rgba(212,175,55,0.2)', marginBottom:'1.5rem'}}>
-                {(['info','history'] as const).map(tab => (
+                {(['info','history','daily'] as const).map(tab => (
                   <button key={tab} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'0.8rem', background:'transparent', border:'none', borderBottom: profileTab===tab ? '2px solid #D4AF37' : '2px solid transparent', color: profileTab===tab ? '#D4AF37' : 'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:'Poppins', fontWeight:600, fontSize:'0.9rem', letterSpacing:'1px', transition:'0.3s'}}>
-                    {tab==='info' ? '👤 Hesap Bilgileri' : `📜 Geçmiş Fallarım (${pastFortunes.filter(f=>f.username===currentUser.username).length})`}
+                    {tab==='info' ? '👤 ' + (t.ovw||'Hesap') : tab==='history' ? `📜 ${t.crmHistory||'Geçmiş'}` : '🕯️ ' + (t.savedNotesTitle||'Günlük')}
                   </button>
                 ))}
               </div>
@@ -691,6 +745,29 @@ export default function App() {
                       </div>
                     ))
                   )}
+                </div>
+              )}
+
+              {/* Daily Notes Tab */}
+              {profileTab === 'daily' && (
+                <div style={{overflowY:'auto', maxHeight:'480px', display:'flex', flexDirection:'column', gap:'1rem', paddingRight:'0.5rem'}}>
+                   {savedNotes.length === 0 ? (
+                     <div style={{textAlign:'center', padding:'3rem', opacity:0.4}}>
+                       <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📜</div>
+                       <p>{t.noSavedNotes || 'Henüz kaydedilmiş fısıltın yok.'}</p>
+                     </div>
+                   ) : (
+                     savedNotes.map(n => (
+                       <div key={n.id} style={{background:'rgba(255,255,255,0.02)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:'16px', padding:'1.5rem', borderLeft:'4px solid #D4AF37', position:'relative'}}>
+                          <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:'#D4AF37', fontWeight:700, marginBottom:'0.8rem', letterSpacing:'1px'}}>
+                             <span>FISILTI</span>
+                             <span>{n.date}</span>
+                          </div>
+                          <p style={{fontSize:'0.9rem', color:'#EAEAEA', lineHeight:1.7, fontStyle:'italic', margin:0}}>"{n.text}"</p>
+                          <button onClick={()=>{setSavedNotes(savedNotes.filter(x=>x.id!==n.id))}} style={{marginTop:'1rem', background:'transparent', border:'none', color:'#ff4d4d', opacity:0.5, fontSize:'0.75rem', cursor:'pointer', padding:0}}>{t.deleteNote}</button>
+                       </div>
+                     ))
+                   )}
                 </div>
               )}
            </div>
@@ -808,10 +885,13 @@ export default function App() {
                <button className="modal-close-btn" onClick={()=>setShowAdmin(false)}>✕</button>
                {!isAdminUnlocked ? (
                  <div className="admin-lock">
-                    <LockIcon />
-                    <h2 className="title-font" style={{color:'#EAEAEA', fontSize:'2.2rem', letterSpacing:'5px', textTransform:'uppercase'}}>{t.adminGatewayTitle}</h2>
+                    <div className="mystic-ring" style={{width:'180px', height:'180px', opacity:0.3}}></div>
+                    <div className="mystic-ring" style={{width:'240px', height:'240px', opacity:0.15, animationDirection:'reverse', animationDuration:'15s'}}></div>
+                    <LockIcon className="lock-ping" />
+                    <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.5rem', letterSpacing:'8px', textTransform:'uppercase', marginTop:'1rem', textShadow:'0 0 20px rgba(212,175,55,0.4)'}}>{t.adminGatewayTitle}</h2>
+                    <div style={{color:'rgba(255,255,255,0.4)', fontSize:'0.9rem', marginBottom:'-0.5rem', letterSpacing:'2px'}}>{t.adminGatewayPass.toUpperCase()}</div>
                     <input id="adminPassInput" className="admin-lock-input" type="password" placeholder="••••••" onKeyUp={e => e.key==='Enter' && (e.currentTarget.value==='010409'?setIsAdminUnlocked(true):addToast('Access Denied','error'))} />
-                    <button className="btn-upload" style={{marginTop:'1rem', padding:'1rem 3rem'}} onClick={()=>{
+                    <button className="btn-upload" style={{marginTop:'1.5rem', padding:'1rem 4rem', fontSize:'1.1rem', background:'linear-gradient(45deg, #8B6B3F, #D4AF37)'}} onClick={()=>{
                       const inp = document.getElementById('adminPassInput') as HTMLInputElement;
                       if(inp && inp.value==='010409') setIsAdminUnlocked(true); else addToast('Access Denied','error');
                     }}>{t.adminBtnConfirm}</button>
@@ -1011,6 +1091,7 @@ export default function App() {
                   </div>
                 </div>
                )}
+
            </div>
         </div>
       )}
@@ -1049,6 +1130,31 @@ export default function App() {
               >
                 {t.adminBtnConfirm}
               </button>
+           </div>
+        </div>
+      )}
+
+      {showDailyNote && (
+        <div className="modal-overlay" onClick={()=>setShowDailyNote(false)}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px', textAlign:'center', padding:'4rem 3rem'}}>
+              <button className="modal-close-btn" onClick={()=>setShowDailyNote(false)}>✕</button>
+              <div style={{fontSize:'4rem', marginBottom:'1.5rem', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.4))'}}>🕯️</div>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem'}}>{t.dailyNoteTitle}</h2>
+              <div style={{height:'1px', background:'linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)', margin:'1.5rem 0'}}></div>
+              
+              <div style={{background:'rgba(212,175,55,0.03)', padding:'2rem', borderRadius:'25px', border:'1px solid rgba(212,175,55,0.15)', marginBottom:'2.5rem', position:'relative', overflow:'hidden'}}>
+                 <div style={{position:'absolute', top:0, left:0, fontSize:'3rem', opacity:0.05}}>❝</div>
+                 <p style={{fontSize:'1.1rem', color:'#EAEAEA', lineHeight:1.8, fontStyle:'italic', margin:0, position:'relative', zIndex:1}}>
+                   {getDailyWhisper()}
+                 </p>
+              </div>
+
+              <div style={{display:'flex', gap:'1rem'}}>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1.1rem', background:'transparent', color:'#EAEAEA', border:'1px solid rgba(255,255,255,0.2)'}} onClick={()=>setShowDailyNote(false)}>Kapat</button>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1.1rem'}} onClick={()=>{saveDailyNote(); setShowDailyNote(false);}}>
+                   {t.saveNoteBtn}
+                 </button>
+              </div>
            </div>
         </div>
       )}

@@ -147,7 +147,7 @@ body::before {
 .review-name { font-size: 0.85rem; font-weight: 700; color: #D4AF37; margin-bottom: 0.4rem; font-family: 'Poppins', sans-serif; }
 .review-text { font-size: 0.85rem; font-weight: 300; line-height: 1.6; color: #EAEAEA; }
 
-@keyframes scrollVertical { 0% { transform: translateY(100%); } 100% { transform: translateY(-100%); } }
+@keyframes scrollVertical { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
 
 /* V6.4: PREMIUM USER MINI-CARD */
 .user-mini-card {
@@ -238,6 +238,38 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.nav-btn-uniform {
+  height: 60px;
+  width: 100px;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
+  gap: 4px;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn-uniform:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #D4AF37;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(212, 175, 55, 0.1);
+}
+
+.nav-btn-uniform span.icon {
+  font-size: 1.2rem;
 }
 
 .btn-upload {
@@ -584,6 +616,8 @@ body::before {
 [data-theme="light"] .lang-dropdown-container { background: rgba(255,255,255,0.95) !important; border-color: #D4AF37 !important; }
 [data-theme="light"] .lang-dropdown-btn { color: #2A1A10 !important; border-bottom-color: rgba(0,0,0,0.05) !important; }
 [data-theme="light"] .lang-dropdown-btn:hover { background: rgba(212,175,55,0.1) !important; }
+[data-theme="light"] .nav-btn-uniform { background: rgba(0,0,0,0.04); border-color: rgba(212, 175, 55, 0.4); color: #5A4A30; }
+[data-theme="light"] .nav-btn-uniform:hover { background: rgba(212, 175, 55, 0.1); border-color: #D4AF37; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
 [data-theme="light"] .admin-sidebar { background: rgba(255,255,255,0.7); border-color: rgba(212, 175, 55, 0.3); }
 [data-theme="light"] .admin-sidebar .nav-item { color: #4A3A30; }
 [data-theme="light"] .admin-content { background: rgba(255,255,255,0.4); }
