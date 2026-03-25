@@ -5,7 +5,7 @@ import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/i
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
 type Mood = 'sad' | 'curious' | 'happy' | 'excited' | null;
-type Tier = 'free' | 'premium' | 'premium-extra';
+type Tier = 'free' | 'premium' | 'premium-extra' | 'elite';
 
 interface User { id: string; username: string; pass: string; credits: number; tier: Tier; isBanned: boolean; warnings?: number; }
 interface PastFortune { id: string; username: string; date: string; fortune: string; highlights: any[]; imageUrl: string; mood?: string; }
@@ -602,7 +602,7 @@ export default function App() {
                 <div>
                   <div style={{fontSize:'1.4rem', fontWeight:700, color:'#EAEAEA'}}>{currentUser.username}</div>
                   <div style={{color:'#D4AF37', textTransform:'uppercase', fontSize:'0.8rem', letterSpacing:'2px'}}>
-                    {currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : currentUser.tier} • {currentUser.tier==='free' ? `${currentUser.credits} kredi` : '∞ kredi'}
+                    {currentUser.tier === 'elite' ? t.storeElite : currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : (t.tierFree || 'Free')} • {currentUser.tier==='free' ? `${currentUser.credits} kredi` : '∞ kredi'}
                   </div>
                 </div>
               </div>
@@ -745,7 +745,7 @@ export default function App() {
                     <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>₺169 / mo</div>
                     <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.pe[0]}</li><li>{t.storeFeatures?.pe[1]}</li><li>{t.storeFeatures?.pe[2]}</li></ul>
                  </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'elite', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
                     <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>✨</div>
                     <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeElite}</h3>
                     <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.e}</p>
@@ -820,7 +820,7 @@ export default function App() {
                                 <div>
                                   <strong style={{fontSize:'1.1rem', color:'#fff', marginRight:'1rem'}}>{u.username}</strong>
                                   <code style={{color:'#D4AF37', background:'rgba(212,175,55,0.1)', padding:'0.2rem 0.6rem', borderRadius:'6px', fontSize:'0.85rem', marginRight:'1.5rem'}}>{u.pass}</code>
-                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
+                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'elite' ? t.storeElite : u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
                                   {u.isBanned && <span style={{color:'#ff4d4d', marginLeft:'1rem', fontWeight:600}}>{t.suspendedBadge}</span>}
                                 </div>
                                 <div style={{opacity: 0.5, transform: selectedUserId === u.id ? 'rotate(180deg)' : 'none', transition: '0.3s'}}>▼</div>
@@ -858,6 +858,7 @@ export default function App() {
                                            <option value="free">Free</option>
                                            <option value="premium">Premium</option>
                                            <option value="premium-extra">Premium Extra</option>
+                                           <option value="elite">Elite (Oracle)</option>
                                         </select>
                                      </div>
 
