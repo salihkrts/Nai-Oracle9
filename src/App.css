@@ -126,7 +126,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  animation: scrollVertical 70s linear infinite;
+  animation: scrollVertical 140s linear infinite;
 }
 .reviews-scroller:hover { animation-play-state: paused; }
 

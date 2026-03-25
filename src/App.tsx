@@ -115,25 +115,23 @@ export default function App() {
   const [pastFortunes, setPastFortunes] = useState<PastFortune[]>(() => lsGet('nai_fortunes', []));
   const [supportMessages, setSupportMessages] = useState<SupportMsg[]>(() => lsGet('nai_messages', []));
   const [supportInput, setSupportInput] = useState('');
+  const [logs, setLogs] = useState<string[]>(() => lsGet('nai_logs', []));
+
+  const addLog = useCallback((msg: string) => {
+    const entry = `[${new Date().toLocaleString()}] ${msg}`;
+    setLogs(prev => {
+      const newLogs = [entry, ...prev].slice(0, 50);
+      lsSet('nai_logs', newLogs);
+      return newLogs;
+    });
+  }, []);
 
   const t = content[lang] || content['en'];
 
   useEffect(() => {
-    let modified = false;
-    const unbannedUsers = users.map(u => {
-      if (u.isBanned) { modified = true; return { ...u, isBanned: false }; }
-      return u;
-    });
-    if (modified) {
-      setUsers(unbannedUsers); lsSet('nai_users', unbannedUsers);
-      if (currentUser?.isBanned) {
-        const fixedMe = { ...currentUser, isBanned: false };
-        setCurrentUser(fixedMe); lsSet('nai_current_user', fixedMe);
-      }
-    }
-  }, []);
-
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+    // Theme initialization
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
   
   useEffect(() => {
     const arr = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
@@ -176,11 +174,13 @@ export default function App() {
       const neu: User = { id: Date.now().toString(), username: authInp.user, pass: authInp.pass, credits: 3, tier: 'free', isBanned: false };
       const nu = [...users, neu]; setUsers(nu); lsSet('nai_users', nu);
       setCurrentUser(neu); lsSet('nai_current_user', neu);
+      addLog(`New User Registered: ${neu.username}`);
       addToast(t.toastWelcome?.replace('{u}', neu.username) || `Welcome, ${neu.username}`);
     } else {
       const u = users.find(x => x.username === authInp.user && x.pass === authInp.pass);
       if (!u) { setAuthError(t.errWrongCreds); return; }
       setCurrentUser(u); lsSet('nai_current_user', u);
+      addLog(`User Logged In: ${u.username}`);
       addToast(t.toastWelcome?.replace('{u}', u.username) || `Welcome back, ${u.username}`);
     }
     setShowAuthModal(false); setAuthInp({user:'',pass:''});
@@ -254,6 +254,7 @@ export default function App() {
       tier: tier !== 'free' ? tier : u.tier, 
       credits: tier !== 'free' ? (tier === 'premium' ? 100 : 9999) : u.credits + amount
     }));
+    addLog(`Store Purchase: ${name} by ${currentUser.username}`);
     addToast(`${name} Processed`, 'success');
     setShowPremium(false);
   };
@@ -798,6 +799,7 @@ export default function App() {
                                           <button onClick={()=>{
                                             const uList = users.map(x => x.id === u.id ? {...x, isBanned: !x.isBanned} : x);
                                             setUsers(uList); lsSet('nai_users', uList);
+                                            addLog(u.isBanned ? `User ${u.username} unbanned` : `User ${u.username} suspended`);
                                             if (currentUser?.id === u.id) { setCurrentUser({...u, isBanned: !u.isBanned}); lsSet('nai_current_user', {...u, isBanned: !u.isBanned}); }
                                           }} className="text-btn" style={{background: u.isBanned ? 'rgba(212,175,55,0.2)' : 'rgba(255,77,77,0.1)', color: u.isBanned ? '#D4AF37' : '#ff4d4d', border: `1px solid ${u.isBanned ? '#D4AF37' : 'rgba(255,77,77,0.5)'}`}}>
                                             {u.isBanned ? t.btnRestore : t.btnSuspend}
@@ -848,23 +850,44 @@ export default function App() {
                       <div>
                         <h2 className="title-font" style={{color:'#EAEAEA', fontSize:'2rem', marginBottom:'2rem'}}>{t.tabMessages}</h2>
                         <div>
-                          {supportMessages.map(msg => (
-                            <div key={msg.id} className="message-box">
-                               <div className="meta">
-                                 <span style={{color:'#D4AF37', fontWeight:600}}>{msg.user}</span>
-                                 <span style={{opacity:0.6}}>{msg.date}</span>
-                               </div>
-                               <div className="content">{msg.text}</div>
-                            </div>
-                          ))}
+                          {supportMessages.map(msg => {
+                            const userObj = users.find(u => u.username === msg.user);
+                            return (
+                              <div key={msg.id} className="message-box">
+                                 <div className="meta">
+                                   <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                      <span style={{color:'#D4AF37', fontWeight:600}}>{msg.user}</span>
+                                      {userObj?.isBanned && (
+                                        <button 
+                                          onClick={() => {
+                                            const uList = users.map(x => x.id === userObj.id ? {...x, isBanned: false} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            addLog(`User ${userObj.username} unbanned via messages`);
+                                            addToast('User Unbanned', 'success');
+                                          }}
+                                          className="text-btn" 
+                                          style={{background:'rgba(212,175,55,0.2)', color:'#D4AF37', border:'1px solid #D4AF37', padding:'0.3rem 0.8rem', fontSize:'0.75rem'}}
+                                        >
+                                          Banı Kaldır
+                                        </button>
+                                      )}
+                                   </div>
+                                   <span style={{opacity:0.6}}>{msg.date}</span>
+                                 </div>
+                                 <div className="content">{msg.text}</div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
                     {adminTab === 'logs' && (
-                      <div className="log-terminal" style={{background:'rgba(0,0,0,0.8)', border:'1px solid rgba(212,175,55,0.2)', color:'#D4AF37', padding:'2rem', height:'100%', fontFamily:'monospace', borderRadius:'20px'}}>
-                         <p style={{marginBottom:'0.5rem'}}>&gt; SYSTEM_UPGRADE: "NAI V6.3 LUXURY EDITION"</p>
-                         <p style={{marginBottom:'0.5rem'}}>&gt; INITIATING_CRM_UI: <span style={{color:'#0f0'}}>SUCCESS</span></p>
-                         <p style={{marginBottom:'0.5rem'}}>&gt; EMOJIS_PURGED: <span style={{color:'#0f0'}}>SUCCESS</span></p>
+                      <div className="log-terminal" style={{background:'rgba(0,0,0,0.8)', border:'1px solid rgba(212,175,55,0.2)', color:'#D4AF37', padding:'2rem', height:'100%', fontFamily:'monospace', borderRadius:'20px', overflowY:'auto'}}>
+                         {logs.length === 0 ? (
+                           <p style={{opacity:0.5}}>&gt; No logs available.</p>
+                         ) : (
+                           logs.map((log, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.85rem'}}>&gt; {log}</p>)
+                         )}
                       </div>
                     )}
                   </div>
