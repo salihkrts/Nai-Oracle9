@@ -474,17 +474,17 @@ export default function App() {
                   </>
                 )}
              </button>
-             {!currentUser ? (
+             <button className="nav-btn-uniform" onClick={()=>{setShowDailyNote(true)}}>
+                <span className="icon">🕯️</span>
+                <span>{t.whisperLabel}</span>
+              </button>
+              {!currentUser ? (
                <button className="nav-btn-uniform" onClick={()=>setShowAuthModal(true)}>
                  <span className="icon">🔑</span>
                  <span>{t.authBtn}</span>
                </button>
              ) : (
                <>
-                 <button className="nav-btn-uniform" onClick={()=>{setShowDailyNote(true)}}>
-                   <span className="icon">🕯️</span>
-                   <span>{t.whisperLabel}</span>
-                 </button>
                  <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>
                    <span className="icon">👤</span>
                    <span>{t.profileBtn?.replace('👤','').trim()}</span>
