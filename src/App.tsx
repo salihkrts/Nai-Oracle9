@@ -50,7 +50,22 @@ export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
   
-  const [users, setUsers] = useState<User[]>(() => lsGet('nai_users', []));
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = lsGet('nai_users', []);
+    if (saved.length < 50) {
+      const botNames = ['Alperen','Buse','Cihan','Derya','Emir','Funda','Gökhan','Hande','İbrahim','Jale','Kaan','Leman','Murat','Nalan','Okan','Pelin','Rıfat','Selin','Tarik','Ufuk','Vildan','Yasin','Zehra','Burak','Merve','Sertan','Elif','Onur','Deniz','Ege','İrem','Arda','Seda','Mert','Yağmur','Yiğit','Melis','Can','Aslı','Batuhan','Dila','Enes','Gözde','Furkan','Kübra','Oğuz','Tuğba','Yunus','Sibel','Tolga'];
+      const bots: User[] = botNames.map((name, i) => ({
+        id: `bot_${i}`,
+        username: `${name}${Math.floor(Math.random()*999)}`,
+        pass: 'botpass',
+        credits: Math.floor(Math.random()*20) + 5,
+        tier: i % 15 === 0 ? 'premium' : 'free',
+        isBanned: false
+      }));
+      return [...saved, ...bots.filter(b => !saved.find((u: User) => u.username === b.username))];
+    }
+    return saved;
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(() => lsGet('nai_current_user', null));
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login'|'register'>('login');
@@ -96,6 +111,16 @@ export default function App() {
       { id: 'r18', name: 'Serkan U.', stars: 5, text: 'Tasarım mükemmel, hiç bu kadar şık bir fal uygulaması görmemiştim. Devamı gelsin.' },
       { id: 'r19', name: 'Pınar E.', stars: 5, text: 'Arkadaş grubumuzda paylaştım, hepimiz bağımlı olduk. Harika bir uygulama.' },
       { id: 'r20', name: 'Emre Ç.', stars: 5, text: 'YZ destekli olması güven veriyor. Sahte değil, gerçekten fotoğrafı analiz ediyor.' },
+      { id: 'r21', name: 'Selinay V.', stars: 5, text: 'İnanılmaz bir deneyim, her sabah kahvemi içtikten sonra ilk işim buraya gelmek.' },
+      { id: 'r22', name: 'Kerem O.', stars: 4, text: 'Analizler çok başarılı, sadece bazen biraz bekletiyor ama değiyor.' },
+      { id: 'r23', name: 'Damla L.', stars: 5, text: 'Aura analizi bölümü çok etkileyici. Renkler ve anlamları tam beni özetliyor.' },
+      { id: 'r24', name: 'Murat G.', stars: 5, text: 'Premium Extra aldım, sınırsız kredi ile her gün 3-4 kez baktırıyorum.' },
+      { id: 'r25', name: 'Ece N.', stars: 5, text: 'Görsellik ve kullanıcı deneyimi muazzam. Lüks hissini sonuna kadar alıyorsunuz.' },
+      { id: 'r26', name: 'Deniz S.', stars: 4, text: 'Fal yorumları çok derinlemesine. Diğer uygulamalar gibi yüzeysel değil.' },
+      { id: 'r27', name: 'Oğuzhan K.', stars: 5, text: 'Haftalık burç yorumlarıyla birleşince tadından yenmiyor.' },
+      { id: 'r28', name: 'Yaren Z.', stars: 5, text: 'Şanslı numaralarım ile piyango bileti aldım, bakalım ne olacak. :))' },
+      { id: 'r29', name: 'Bora A.', stars: 5, text: 'Sistem gerçekten fotoğrafı analiz ediyor, sallamasyon değil. Test ettim onayladım.' },
+      { id: 'r30', name: 'Aslıhan T.', stars: 5, text: 'Mistik hava çok iyi yansıtılmış. Teşekkürler NAI Oracle.' },
     ];
     // Ensure saved reviews always have IDs
     if (saved && Array.isArray(saved)) {
@@ -497,7 +522,7 @@ export default function App() {
              <div className="result-sequence">
                <div className="fortune-report" style={{whiteSpace:'pre-line'}}>
                   <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.5rem', marginBottom:'2rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'1rem'}}>{t.resultTitle}</h2>
-                  <div style={{color:'rgba(255,255,255,0.9)', fontSize:'1.1rem', lineHeight:2.2, fontWeight:300}}>
+                  <div style={{color:'var(--text-main)', fontSize:'1.1rem', lineHeight:2.2, fontWeight:300}}>
                     {aiResult.fortune}
                   </div>
                </div>
@@ -534,7 +559,7 @@ export default function App() {
                        <div key={idx} className="highlight-card" style={{position:'absolute', width:'220px', left:'0', top: idx === 0 ? '5%' : '52%', zIndex:8}}>
                          <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>{idx===0?'🔮':'⚡'}</div>
                          <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{h.word}</h4>
-                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'#fff', margin:0, lineHeight:1.6}}>{h.explanation_long}</p>
+                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{h.explanation_long}</p>
                        </div>
                      ))}
 
@@ -543,7 +568,7 @@ export default function App() {
                        <div className="highlight-card" style={{position:'absolute', width:'220px', right:'0', top:'25%', zIndex:8}}>
                          <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>🌙</div>
                          <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{aiResult.highlights[2].word}</h4>
-                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'#fff', margin:0, lineHeight:1.6}}>{aiResult.highlights[2].explanation_long}</p>
+                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{aiResult.highlights[2].explanation_long}</p>
                        </div>
                      )}
                    </div>
@@ -992,16 +1017,38 @@ export default function App() {
 
       {showReviewModal && (
         <div className="modal-overlay" style={{zIndex: 1000000}} onClick={()=>setShowReviewModal(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'2.5rem', maxWidth:'400px'}}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'3rem', maxWidth:'450px', background:'linear-gradient(160deg, #1a1a1a, #0a0a0a)', border:'1px solid rgba(212,175,55,0.4)', borderRadius:'30px', boxShadow:'0 20px 50px rgba(0,0,0,0.8)'}}>
               <button className="modal-close-btn" onClick={()=>setShowReviewModal(false)}>✕</button>
-              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'1.8rem', marginBottom:'1.5rem', textAlign:'center'}}>{t.writeReviewBtn}</h2>
-              <div style={{display:'flex', justifyContent:'center', gap:'0.6rem', marginBottom:'1.5rem', fontSize:'2.5rem', cursor:'pointer'}}>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem', textAlign:'center', textShadow:'0 0 15px rgba(212,175,55,0.3)'}}>{t.writeReviewBtn}</h2>
+              <p style={{color:'rgba(255,255,255,0.6)', textAlign:'center', marginBottom:'2rem', fontSize:'0.9rem'}}>Deneyimini toplulukla paylaş.</p>
+              
+              <div className="review-stars-input">
                  {[1,2,3,4,5].map(s => (
-                   <span key={s} onClick={()=>setReviewInput({...reviewInput, stars: s})} style={{color: reviewInput.stars >= s ? '#FFDF73' : 'rgba(255,255,255,0.1)', transition:'0.3s'}}>★</span>
+                   <span 
+                    key={s} 
+                    onClick={()=>setReviewInput({...reviewInput, stars: s})} 
+                    className={`star-input ${reviewInput.stars >= s ? 'active' : ''}`}
+                    style={{color: reviewInput.stars >= s ? '#FFDF73' : 'rgba(255,255,255,0.1)'}}
+                   >
+                    ★
+                   </span>
                  ))}
               </div>
-              <textarea placeholder={t.reviewTitle + '...'} value={reviewInput.text} onChange={e=>setReviewInput({...reviewInput, text: e.target.value})} style={{width:'100%', minHeight:'120px', padding:'1rem', borderRadius:'15px', border:'1px solid rgba(212,175,55,0.3)', background:'rgba(0,0,0,0.5)', color:'#EAEAEA', outline:'none', fontFamily:'Poppins', resize:'none', marginBottom:'1.5rem'}}></textarea>
-              <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={handleReviewSubmit}>{t.adminBtnConfirm}</button>
+
+              <textarea 
+                className="review-textarea"
+                placeholder={t.reviewTitle + '...'} 
+                value={reviewInput.text} 
+                onChange={e=>setReviewInput({...reviewInput, text: e.target.value})}
+              ></textarea>
+
+              <button 
+                className="btn-upload" 
+                style={{margin:0, width:'100%', padding:'1.3rem', fontSize:'1.1rem', letterSpacing:'2px'}} 
+                onClick={handleReviewSubmit}
+              >
+                {t.adminBtnConfirm}
+              </button>
            </div>
         </div>
       )}
