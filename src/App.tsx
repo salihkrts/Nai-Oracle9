@@ -551,7 +551,7 @@ export default function App() {
                  <div className="laser-beam"></div>
                </div>
                <div style={{background:'rgba(0,0,0,0.6)', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'20px', padding:'1.5rem 2.5rem', width:'100%', maxWidth:'600px', fontFamily:'monospace', backdropFilter:'blur(10px)'}}>
-                 <div style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'3px', marginBottom:'1rem', opacity:0.7}}>NAI VISION ENGINE v3.3 — PROCESSING</div>
+                 <div style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'3px', marginBottom:'1rem', opacity:0.7}}>NAI VISION ENGINE v4.0 — RIGOROUS SCANNING ACTIVE</div>
                  {[
                    { phase: 'BOOT', label: 'Sistem Başlatıldı', done: true },
                    { phase: 'PIXEL_READ', label: 'Piksel Verisi Çekiliyor', done: true },
