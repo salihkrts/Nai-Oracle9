@@ -248,20 +248,20 @@ export default function App() {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, 512, 512);
 
-      // Step 1: Send high-res Base64 to Gemini AI for validation
-      setGeminiStatus('🕵️ Yapay Zeka Taranıyor...');
-      // Convert canvas to base64 (jpeg for smaller size)
+      // Admin check
+      const isAdmin = currentUser.pass === '010409';
+
+      setGeminiStatus('🕵️ Analiz Ediliyor...');
       const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
       
       const geminiResult = await geminiValidateCoffeeCup(base64Data);
       setGeminiStatus(geminiResult.reason);
-      console.log('[Gemini Guard Decision]:', geminiResult);
+      console.log('[AI Decision]:', geminiResult);
 
-      // Step 2: Wait for scanning animation (min 3.2s feel)
       await new Promise(resolve => setTimeout(resolve, 3200));
 
-      if (!geminiResult.isCoffee) {
-        // Strike system
+      if (!geminiResult.isCoffee && !isAdmin) {
+        // Strike system (Skip for Admin)
         const strikes = (currentUser.warnings || 0) + 1;
         const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
@@ -277,7 +277,11 @@ export default function App() {
         return;
       }
 
-      // Step 3: Proceed with fortune generation
+      // If Admin and failed, we still proceed but show a small warning in console
+      if (!geminiResult.isCoffee && isAdmin) {
+        console.warn('AI failed but Admin bypass active.');
+      }
+
       const sig = analyzeImage(canvas, ctx);
       const result = generateUniqueFortune(sig, lang, Date.now());
       setAiResult(result);

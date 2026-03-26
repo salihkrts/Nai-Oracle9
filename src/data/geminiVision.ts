@@ -48,9 +48,15 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      return { isCoffee: false, confidence: 0, reason: `API HATASI (${response.status})` };
+      let errDetail = '';
+      try {
+        const errJson = await response.json();
+        errDetail = errJson.error?.message || response.statusText;
+      } catch (e) {
+        errDetail = response.statusText;
+      }
+      console.error('Gemini API error:', response.status, errDetail);
+      return { isCoffee: false, confidence: 0, reason: `HATA: ${response.status} (${errDetail.slice(0, 20)}...)` };
     }
 
     const data = await response.json();
