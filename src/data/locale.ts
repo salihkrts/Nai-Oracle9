@@ -2,7 +2,7 @@ export const content: Record<string, any> = {
   tr: {
     title: 'Nai Profesyonel Kahve Falı', subtitle: 'Telvedeki gizli kilitleri Yapay Zeka ile eşsiz bir şekilde yorumluyoruz.',
     uploadTitle: 'Fincan fotoğrafını yükle', uploadSub: 'Sürükle bırak / Yüklemek için tıkla', uploadDrag: 'Fotoğrafı sürükle',
-    btnInterpret: 'Detaylı Fal Analizi Başlat', errNoImage: 'Lütfen önce fincan fotoğrafı yükle.', errNotCoffee: (r:number, c:number) => `[HATA] Nesne Algılanamadı - %${c} Eşleşme. Ciddi Uyarınız Kaldı: ${r}`,
+    btnInterpret: 'Detaylı Fal Analizi Başlat', errNoImage: 'Lütfen önce fincan fotoğrafı yükle.', errNotCoffee: (s:number, c:number) => `[İHLAL TESPİT EDİLDİ] Bu bir kahve fincanı değil. ${s}. uyarınızı aldınız. 3. ihlalde hesabınız süresiz yasaklanacaktır. (${c}% eşleşme)`,
     analyzingCoffee: 'Tarama başlatıldı...', analyzingFortune: 'Evrensel ağa bağlanılıyor, telve ritüeli çözümleniyor...', resultTitle: 'Derin Fal Raporu', btnNew: 'Yeni Yorumlama', photoChange: 'Fotoğrafı Değiştir',
     themeLight: 'Gündüz', themeDark: 'Gece', storeBtn: 'Mağaza 💎',
     
@@ -57,7 +57,7 @@ export const content: Record<string, any> = {
   en: {
     title: 'Nai Pro Coffee Reading', subtitle: 'Deep AI interpretation of hidden coffee symbols.',
     uploadTitle: 'Upload cup photo', uploadSub: 'Drag & drop or select', uploadDrag: 'Drop photo here!',
-    btnInterpret: 'Start Deep Analysis', errNoImage: 'Upload a cup photo first.', errNotCoffee: (r:number, c:number) => `[ERROR] Unknown Object - ${c}% Match. Strikes left: ${r}`,
+    btnInterpret: 'Start Deep Analysis', errNoImage: 'Upload a cup photo first.', errNotCoffee: (s:number, c:number) => `[VIOLATION DETECTED] This is not a coffee cup. You have received strike ${s}. 3 violations will result in a permanent ban. (${c}% match)`,
     analyzingCoffee: 'Initiating scan...', analyzingFortune: 'Connecting to cosmic grid, deciphering ritual...', resultTitle: 'Deep Fortune Report', btnNew: 'New Reading', photoChange: 'Change Photo',
     themeLight: 'Light Mode', themeDark: 'Dark Mode', storeBtn: 'Store 💎',
 
@@ -112,7 +112,7 @@ export const content: Record<string, any> = {
   es: {
     title: 'Lectura Profesional Nai', subtitle: 'Interpretación profunda de la Inteligencia Artificial.',
     uploadTitle: 'Sube tu foto', uploadSub: 'Arrastra o selecciona', uploadDrag: '¡Suelta foto!',
-    btnInterpret: 'Iniciar Análisis Profundo', errNoImage: 'Sube la foto de la taza primero.', errNotCoffee: (r:number, c:number) => `[ERROR] Objeto no detectado - ${c}% Coincidencia. Intentos restantes: ${r}`,
+    btnInterpret: 'Iniciar Análisis Profundo', errNoImage: 'Sube la foto de la taza primero.', errNotCoffee: (s:number, c:number) => `[VIOLACIÓN DETECTADA] Esto no es una taza de café. Ha recibido la advertencia ${s}. 3 infracciones resultarán en una expulsión permanente. (${c}% coincidencia)`,
     analyzingCoffee: 'Iniciando escaneo...', analyzingFortune: 'Conectando a la red cósmica, descifrando el ritual...', resultTitle: 'Reporte de Fortuna', btnNew: 'Nueva Lectura', photoChange: 'Cambiar',
     themeLight: 'Modo Claro', themeDark: 'Modo Oscuro', storeBtn: 'Tienda 💎',
 
@@ -166,7 +166,7 @@ export const content: Record<string, any> = {
   ru: {
     title: 'Профессиональное Гадание Nai', subtitle: 'Глубокий анализ кофейных символов ИИ.',
     uploadTitle: 'Загрузите фото', uploadSub: 'Перетащите или выберите', uploadDrag: 'Бросьте сюда!',
-    btnInterpret: 'Начать глубокий анализ', errNoImage: 'Сначала загрузите фото.', errNotCoffee: (r:number, c:number) => `[Ошибка] Объект не распознан - ${c}% совпадения. Осталось предупреждений: ${r}`,
+    btnInterpret: 'Начать глубокий анализ', errNoImage: 'Сначала загрузите фото.', errNotCoffee: (s:number, c:number) => `[НАРУШЕНИЕ ОБНАРУЖЕНО] Это не кофейная чашка. Вы получили предупреждение ${s}. 3 нарушения приведут к вечной блокировке. (${c}% совпадение)`,
     analyzingCoffee: 'Инициализация...', analyzingFortune: 'Подключение к космической сети, расшифровка ритуала...', resultTitle: 'Отчет От Судьбе', btnNew: 'Новое гадание', photoChange: 'Изменить',
     themeLight: 'Светлый', themeDark: 'Темный', storeBtn: 'Магазин 💎',
 
@@ -220,7 +220,7 @@ export const content: Record<string, any> = {
   ar: {
     title: 'قراءة الفنجان الاحترافية', subtitle: 'تحليل ذكاء اصطناعي عميق للرموز المخفية.',
     uploadTitle: 'ارفع الصورة', uploadSub: 'اسحب وافلت', uploadDrag: 'اترك الصورة هنا!',
-    btnInterpret: 'تحليل عميق للفنجان', errNoImage: 'ارفع الصورة أولاً.', errNotCoffee: (r:number, c:number) => `[خطأ] لم يتم التعرف على الكائن - تطابق ${c}٪. المحاولات المتبقية: ${r}`,
+    btnInterpret: 'تحليل عميق للفنجان', errNoImage: 'ارفع الصورة أولاً.', errNotCoffee: (s:number, c:number) => `[تم اكتشاف انتهاك] هذه ليست فنجان قهوة. لقد تلقيت التحذير رقم ${s}. 3 انتهاكات ستؤدي إلى حظر دائم. (مطابقة ${c}%)`,
     analyzingCoffee: 'بدء المسح...', analyzingFortune: 'جارٍ الاتصال بالشبكة الكونية وفك تشفير الطقوس...', resultTitle: 'تقرير الطالع', btnNew: 'قراءة جديدة', photoChange: 'تغيير',
     themeLight: 'وضع النهار', themeDark: 'وضع الليل', storeBtn: 'المتجر 💎',
 

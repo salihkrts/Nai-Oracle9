@@ -262,9 +262,9 @@ export default function App() {
           setStage('upload');
           if (strikes >= 3) {
             // Banned — will auto-redirect to banned screen
-            addToast(t.errNotCoffee(0, validation.confidence), 'error');
+            addToast(t.errNotCoffee(3, validation.confidence), 'error');
           } else {
-            setError(t.errNotCoffee(remaining, validation.confidence));
+            setError(t.errNotCoffee(strikes, validation.confidence));
           }
           return;
         }
@@ -701,13 +701,13 @@ export default function App() {
                   <div style={{background:'rgba(255,255,255,0.02)', padding:'1.2rem 1.5rem', borderRadius:'15px', border:'1px solid rgba(212,175,55,0.15)', marginBottom:'1rem'}}>
                     {[
                       { label: t.credits, value: currentUser.tier === 'free' ? currentUser.credits : t.infinite },
-                      { label: t.warningsText, value: `${currentUser.warnings||0} / 3`, danger: (currentUser.warnings||0) > 0 },
+                      { label: (currentUser.warnings||0) > 0 ? `⚠️ ${t.warningsText}` : t.warningsText, value: `${currentUser.warnings||0} / 3`, danger: (currentUser.warnings||0) > 0 },
                       { label: 'Tier', value: currentUser.tier.toUpperCase() },
                       { label: 'Toplam Fal', value: pastFortunes.filter(f=>f.username===currentUser.username).length },
                     ].map((row, i) => (
                       <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none'}}>
                         <span style={{opacity:0.6, fontSize:'0.9rem'}}>{row.label}</span>
-                        <strong style={{color: (row as any).danger ? '#ff4d4d' : '#D4AF37'}}>{row.value}</strong>
+                        <strong className={(row as any).danger ? 'pulse-error' : ''} style={{color: (row as any).danger ? '#ff4d4d' : '#D4AF37'}}>{row.value}</strong>
                       </div>
                     ))}
                   </div>
