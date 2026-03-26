@@ -253,7 +253,6 @@ export default function App() {
         if (!validation.isValid) {
           // Strike system
           const strikes = (currentUser.warnings || 0) + 1;
-          const remaining = 3 - strikes;
           const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
           const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
           setUsers(allUsers); lsSet('nai_users', allUsers);
