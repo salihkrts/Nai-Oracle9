@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
-import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
+import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'
+import { geminiValidateCoffeeCup } from './data/geminiVision'
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
 type Mood = 'sad' | 'curious' | 'happy' | 'excited' | null;
@@ -240,48 +241,51 @@ export default function App() {
     // Load the actual image into a canvas to extract real pixel data
     const img = new Image();
     img.src = previewUrl;
-    img.onload = () => {
+    img.onload = async () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 200; canvas.height = 200; // downsample for speed
+      canvas.width = 200; canvas.height = 200;
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, 200, 200);
 
-      setTimeout(() => {
-        const sig = analyzeImage(canvas, ctx);
-        const validation = validateCoffeeCup(sig);
+      // Step 1: Send image to Gemini AI for real validation
+      const geminiResult = await geminiValidateCoffeeCup(previewUrl!);
+      console.log('[Gemini AI Decision]:', geminiResult);
 
-        if (!validation.isValid) {
-          // Strike system
-          const strikes = (currentUser.warnings || 0) + 1;
-          const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
-          const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
-          setUsers(allUsers); lsSet('nai_users', allUsers);
-          setCurrentUser(updatedUser); lsSet('nai_current_user', updatedUser);
+      // Step 2: Wait for scanning animation
+      await new Promise(resolve => setTimeout(resolve, 3200));
 
-          setStage('upload');
-          if (strikes >= 3) {
-            // Banned — will auto-redirect to banned screen
-            addToast(t.errNotCoffee(3, validation.confidence), 'error');
-          } else {
-            setError(t.errNotCoffee(strikes, validation.confidence));
-          }
-          return;
+      if (!geminiResult.isCoffee) {
+        // Strike system - Gemini says this is NOT coffee
+        const strikes = (currentUser.warnings || 0) + 1;
+        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
+        const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
+        setUsers(allUsers); lsSet('nai_users', allUsers);
+        setCurrentUser(updatedUser); lsSet('nai_current_user', updatedUser);
+
+        setStage('upload');
+        if (strikes >= 3) {
+          addToast(t.errNotCoffee(3, geminiResult.confidence), 'error');
+        } else {
+          setError(t.errNotCoffee(strikes, geminiResult.confidence));
         }
+        return;
+      }
 
-        const result = generateUniqueFortune(sig, lang, Date.now());
-        setAiResult(result);
-        setLuckyNumbers(getLuckyNumbers(sig.seed));
+      // Step 3: Gemini confirmed coffee! Generate fortune.
+      const sig = analyzeImage(canvas, ctx);
+      const result = generateUniqueFortune(sig, lang, Date.now());
+      setAiResult(result);
+      setLuckyNumbers(getLuckyNumbers(sig.seed));
 
-        if (currentUser.tier === 'free') updateCurrentUser(u => ({ ...u, credits: u.credits - 1 }));
+      if (currentUser.tier === 'free') updateCurrentUser(u => ({ ...u, credits: u.credits - 1 }));
 
-        const newPast: PastFortune = {
-          id: Date.now().toString(), username: currentUser.username, date: new Date().toLocaleString(),
-          fortune: result.fortune, highlights: result.highlights, imageUrl: previewUrl, mood: mood || undefined
-        };
-        const pf = [newPast, ...pastFortunes].slice(0, 50);
-        setPastFortunes(pf); lsSet('nai_fortunes', pf);
-        setStage('result');
-      }, 3200); // allow animation time
+      const newPast: PastFortune = {
+        id: Date.now().toString(), username: currentUser.username, date: new Date().toLocaleString(),
+        fortune: result.fortune, highlights: result.highlights, imageUrl: previewUrl, mood: mood || undefined
+      };
+      const pf = [newPast, ...pastFortunes].slice(0, 50);
+      setPastFortunes(pf); lsSet('nai_fortunes', pf);
+      setStage('result');
     };
     img.onerror = () => {
       setStage('upload');
