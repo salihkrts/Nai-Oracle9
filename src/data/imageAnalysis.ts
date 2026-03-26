@@ -62,43 +62,43 @@ function seededRandom(seed: number, index: number): number {
 }
 
 export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; confidence: number; reason: string } {
-  // === VISION ENGINE V4.0 — RIGOROUS MULTI-CRITERIA COFFEE CUP DETECTION ===
+  // === VISION ENGINE V4.2 — ELITE BALANCE (MAXIMUM COMPATIBILITY) ===
   
   // A. MANDATORY "POISON PILL" REJECTIONS (If these fail, it's NOT coffee)
   
-  // 1. Mandatory Darkness (Coffee grounds MUST be present and dark)
-  if (sig.darkScore < 0.18) {
+  // 1. Mandatory Darkness (Very inclusive for light coffee)
+  if (sig.darkScore < 0.12) {
     return { isValid: false, confidence: 15, reason: 'YETERLİ_KARANLIK_YOK (Fincan boş veya çok parlak)' };
   }
 
-  // 2. Mandatory Form (Must have at least a hint of a circular rim)
-  if (sig.circularityScore < 0.035) {
+  // 2. Mandatory Form (Extremely inclusive for side views)
+  if (sig.circularityScore < 0.02) {
     return { isValid: false, confidence: 20, reason: 'DAİRESEL_YAPI_ELENDİ (Fincan formu tespit edilemedi)' };
   }
 
-  // 3. Mandatory Brightness Cap (Reject overexposed or white surfaces)
+  // 3. Mandatory Brightness Cap (Allows bright white porcelain)
   const avgBright = (sig.topLeftBrightness + sig.topRightBrightness + sig.bottomLeftBrightness + sig.bottomRightBrightness) / 4;
-  if (avgBright > 0.75) {
+  if (avgBright > 0.82) {
      return { isValid: false, confidence: 10, reason: 'AŞIRI_PARLAK_YÜZEY (Kağıt veya boş ekran olabilir)' };
   }
 
-  // B. SCORING CRITERIA (Calibrated for V4.1 Goldilocks Zone)
+  // B. SCORING CRITERIA (Calibrated for V4.2 Elite Balance)
   
-  const isDarkEnough = sig.darkScore > 0.28;        // Lighter grounds/bright rooms OK
-  const hasCircularForm = sig.circularityScore > 0.08; // Non-perfect camera angles OK
-  const hasTexture = sig.textureScore > 0.38;        // Smoother grounds OK
-  const hasContrast = sig.edgeContrast > 0.05;       // Soft focus OK
-  const hasWarmTones = sig.warmScore > 0.08;         // Brown/Amber tones presence
-  const hasCenterDensity = sig.centerDensity > 0.35;  // Standard center weight
-  const hasEntropy = sig.entropy > 0.10;             // Base complexity
+  const isDarkEnough = sig.darkScore > 0.20;        
+  const hasCircularForm = sig.circularityScore > 0.05; 
+  const hasTexture = sig.textureScore > 0.30;        
+  const hasContrast = sig.edgeContrast > 0.04;       
+  const hasWarmTones = sig.warmScore > 0.08;         
+  const hasCenterDensity = sig.centerDensity > 0.28;  
+  const hasEntropy = sig.entropy > 0.08;             
 
   // Calculate weighted score
   const criteria = [isDarkEnough, hasCircularForm, hasTexture, hasContrast, hasWarmTones, hasCenterDensity, hasEntropy];
   const passedCount = criteria.filter(Boolean).length;
   const confidence = Math.round((passedCount / criteria.length) * 100);
 
-  // Must pass at least 4 out of 7 criteria in V4.1 (Lowered from 5/7)
-  if (passedCount < 4) {
+  // Must pass at least 3 out of 7 criteria in V4.2 (Highly inclusive)
+  if (passedCount < 3) {
     const reasons = [
       !isDarkEnough ? 'KARANLIK_SEVİYESİ_DÜŞÜK' : null,
       !hasCircularForm ? 'DAİRESEL_FORM_YETERSİZ' : null,
@@ -112,9 +112,9 @@ export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; conf
     return { isValid: false, confidence: Math.max(confidence, 25), reason: reasons };
   }
 
-  // Final verification score boost for very clear matches
-  const finalConf = Math.min(99, 85 + Math.floor(seededRandom(sig.seed, 11) * 14));
-  return { isValid: true, confidence: finalConf, reason: 'V4.1_KALİBRE_EDİLMİŞ_TARAMA_TAMAMLANDI' };
+  // Final verification score boost
+  const finalConf = Math.min(99, 82 + Math.floor(seededRandom(sig.seed, 11) * 17));
+  return { isValid: true, confidence: finalConf, reason: 'V4.2_ELITE_BALANCE_SAĞLANDI' };
 }
 
 export function generateUniqueFortune(sig: ImageSignature, lang: string, timeSalt: number = 0): { fortune: string; highlights: any[] } {
