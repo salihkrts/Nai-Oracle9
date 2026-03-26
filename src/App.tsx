@@ -234,24 +234,27 @@ function App() {
       <div className="mystic-bg-elements"><div className="mystic-orb orb-1"></div><div className="mystic-orb orb-2"></div><div className="mystic-orb orb-3"></div></div>
       <div className="toast-container">{toasts.map(toast => (<div key={toast.id} className={`toast ${toast.type}`}>{toast.message}</div>))}</div>
       
-      <div className="main-content">
-        <nav className="top-nav">
-          <div className="nav-left"><div className="logo title-font" onClick={()=>{setStage('upload');setPreviewUrl(null);}}>NAI<span>ORACLE</span></div></div>
-          <div className="nav-right">
-            <div className="nav-group">
-              <button className="nav-item lang-trigger" onClick={()=>setShowLangDropdown(!showLangDropdown)}>🌍 {lang.toUpperCase()}</button>
-              {showLangDropdown && (<div className="lang-dropdown">{(['tr','en','es','ar','ru'] as LangCode[]).map(l => (<button key={l} onClick={()=>{setLang(l);setShowLangDropdown(false);}}>{l.toUpperCase()}</button>))}</div>)}
-              <button className="nav-item" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>{theme==='dark'?'☀️':'🌙'}</button>
-            </div>
-            <div className="nav-group">
-              <button className="nav-item" onClick={()=>setShowDailyNote(true)}>🕯️ Fısıltı</button>
-              {currentUser && (<><button className="nav-item gift-pulse-btn" onClick={()=>setShowGiftModal(true)}>🎁 Hediye</button><button className="nav-item" onClick={()=>setShowProfile(true)}>👤 {t.profileBtn}</button></>)}
-              <button className="nav-item highlight" onClick={()=>setShowPremium(true)}>💎 Mağaza</button>
-              {currentUser?.pass === '010409' && (<button className="nav-item admin-btn" onClick={()=>setShowAdmin(true)}>🛡️ Admin</button>)}
-            </div>
-            {!currentUser && (<button className="btn-upload auth-btn-nav" onClick={()=>{setAuthMode('login');setShowAuthModal(true);}}>{t.loginBtn}</button>)}
+      <div className="layout-main">
+        <div className="top-bar">
+          <div className="nav-left">
+            <div className="logo title-font" onClick={()=>{setStage('upload');setPreviewUrl(null);}}>NAI<span>ORACLE</span></div>
           </div>
-        </nav>
+          <div className="nav-right" style={{display:'flex', gap:'0.8rem', alignItems:'center'}}>
+              <button className="nav-btn-uniform" onClick={()=>setShowLangDropdown(!showLangDropdown)}>🌍 <span>{lang.toUpperCase()}</span></button>
+              {showLangDropdown && (<div className="lang-dropdown">{(['tr','en','es','ar','ru'] as LangCode[]).map(l => (<button key={l} onClick={()=>{setLang(l);setShowLangDropdown(false);}}>{l.toUpperCase()}</button>))}</div>)}
+              <button className="nav-btn-uniform" onClick={()=>setTheme(theme==='dark'?'light':'dark')}><span>{theme==='dark'?'☀️':'🌙'}</span></button>
+              <button className="nav-btn-uniform" onClick={()=>setShowDailyNote(true)}>🕯️ <span>Fısıltı</span></button>
+              {currentUser && (
+                <>
+                  <button className="nav-btn-uniform gift-pulse-btn" onClick={()=>setShowGiftModal(true)}>🎁 <span>Hediye</span></button>
+                  <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>👤 <span>Profil</span></button>
+                </>
+              )}
+              <button className="nav-btn-uniform highlight" onClick={()=>setShowPremium(true)}>💎 <span>Mağaza</span></button>
+              {currentUser?.pass === '010409' && (<button className="nav-btn-uniform admin-btn" onClick={()=>setShowAdmin(true)}>🛡️ <span>Admin</span></button>)}
+            {!currentUser && (<button className="btn-upload" style={{margin:0, padding:'0.6rem 1.5rem'}} onClick={()=>{setAuthMode('login');setShowAuthModal(true);}}>{t.loginBtn}</button>)}
+          </div>
+        </div>
 
         <div className="upload-container-wrapper">
            {stage === 'upload' && (
@@ -296,9 +299,21 @@ function App() {
         </div>
         
         <aside className="reviews-sidebar" style={{display: stage==='analyzing'?'none':'flex'}}>
-          <div className="sidebar-title" style={{fontSize:'1.8rem', color:'#D4AF37'}}>{t.reviewTitle}</div>
+          <div className="sidebar-title title-font" style={{fontSize:'1.8rem', color:'#D4AF37', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'1rem', marginBottom:'1.5rem'}}>{t.reviewTitle}</div>
           <div className="reviews-marquee-container"><div className="reviews-scroller">{reviews.concat(reviews).map((r, i) => (<div key={i} className="review-card"><div className="review-stars">{"★".repeat(r.stars)}</div><div className="review-name">{r.name}</div><div className="review-text">"{r.text}"</div></div>))}</div></div>
           <button className="btn-upload" style={{width:'100%', margin:0}} onClick={()=>setShowReviewModal(true)}>{t.writeReviewBtn}</button>
+          
+          {currentUser && (
+            <div className="user-mini-card" style={{marginTop:'2rem'}}>
+               <h4 className="title-font">Hi, {currentUser.username}</h4>
+               <div className="stat-line"><span>Credits:</span> <strong>{currentUser.credits} CP</strong></div>
+               <div className="stat-line"><span>Tier:</span> <strong>{currentUser.tier.toUpperCase()}</strong></div>
+               <div className="action-btns" style={{marginTop:'1.5rem', display:'flex', gap:'0.5rem'}}>
+                  <button className="mini-btn logout" style={{flex:1, padding:'0.5rem', borderRadius:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff'}} onClick={handleLogout}>Çıkış</button>
+                  <button className="mini-btn delete" style={{flex:1, padding:'0.5rem', borderRadius:'10px', background:'rgba(230,57,70,0.1)', border:'1px solid rgba(230,57,70,0.3)', color:'#ff4d4d'}} onClick={()=>{if(confirm('Emin misiniz?')){setUsers(p=>p.filter(x=>x.id!==currentUser.id));handleLogout();}}}>Hesap Sil</button>
+               </div>
+            </div>
+          )}
         </aside>
       </div>
 
