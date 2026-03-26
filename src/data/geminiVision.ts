@@ -2,7 +2,7 @@
 // Uses Google Gemini API to analyze images and determine if they contain a coffee cup
 
 const GEMINI_API_KEY = 'AIzaSyD21_Vif7pV2R7AyqP8zDhLI2X9PzQu7zI';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`;
 
 export interface GeminiValidationResult {
   isCoffee: boolean;
@@ -38,27 +38,23 @@ export async function geminiValidateCoffeeCup(imageUrl: string): Promise<GeminiV
       contents: [{
         parts: [
           {
-            text: `[STRICT SECURITY GATEWAY - TASK: IMAGE VALIDATION]
-Analyze the provided image with maximum scientific accuracy.
+            text: `Sen bir "Mistik Kahve Falı" uzmanısın ve fotoğrafın uygunluğunu denetleyensin. 
+Fotoğrafa bak ve şu kriterlere göre karar ver:
 
-TARGET: Turkish Coffee Cup (Fincan) or Coffee Grounds (Telve).
-VALID CRITERIA:
-- A coffee cup on a saucer (overturned or upright).
-- Dark brown/black coffee grounds inside a cup.
-- A saucer with coffee stains/patterns.
+1. Fotoğraf bir Türk Kahvesi fincanı mı? (Ters çevrilmiş veya açık)
+2. Fincan içinde veya tabakta belirgin kahve telvesi (kurumuş/ıslak) var mı?
+3. Fotoğraf bir fal yorumu yapmaya uygun mu?
 
-INVALID CRITERIA (IMMEDIATE REJECTION):
-- Wood, lumber, furniture, or construction materials.
-- Scenery, buildings, or outdoor environments.
-- People, animals, faces, or body parts.
-- General objects (cars, phones, computers, food that is NOT coffee).
-- Blank screens, blurry or unidentifiable noise.
+ERİŞİM KURALLARI:
+- Kahve fincanı, tabağı veya telvesi varsa: "YES - [Kısa bir onay mesajı]"
+- Eğer tamamen alakasızsa (Masa, odun, insan, yemek, manzara vb.): "NO - [Neden uygun olmadığını açıklayan kısa bir cümle]"
 
-DECISION RULE:
-If the image contains CLEAR EVIDENCE of a coffee cup or grounds, respond: "YES".
-If the image contains ANYTHING ELSE (even if dark or textured), respond: "NO".
+ÖRNEK CEVAPLAR:
+- YES - Geleneksel kahve telvesi ve fincan tespit edildi.
+- NO - Bu fotoğraf bir tahta parçasına benziyor, kahve fincanı değil.
+- NO - Görüntü çok karanlık veya belirsiz, telveler seçilemiyor.
 
-RESPONSE FORMAT: Respond ONLY with one word: YES or NO.`
+LÜTFEN CEVABI BU FORMATTA VER.`
           },
           {
             inline_data: {
@@ -78,26 +74,25 @@ RESPONSE FORMAT: Respond ONLY with one word: YES or NO.`
 
     if (!response.ok) {
       console.error('Gemini API error:', response.status);
-      // FAIL-CLOSED: Reject on API error to prevent exploitation
-      return { isCoffee: false, confidence: 0, reason: 'SYSTEM_ERROR: AI_OFFLINE' };
+      return { isCoffee: false, confidence: 0, reason: 'SİSTEM HATASI: AI ŞU AN MEŞGUL' };
     }
 
     const data = await response.json();
-    const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.toUpperCase() || '';
+    const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     
-    console.log('[Gemini Guard Response]:', aiResponse);
+    console.log('[Gemini 2.0 Guard]:', aiResponse);
 
-    const isCoffee = aiResponse === 'YES';
+    const isCoffee = aiResponse.toUpperCase().startsWith('YES');
+    const reasonText = aiResponse.split('-')[1]?.trim() || aiResponse;
     
     return {
       isCoffee,
-      confidence: isCoffee ? 98 : 5,
-      reason: isCoffee ? 'GEMINI_VERIFIED_AUTHENTIC' : 'GEMINI_SECURITY_REJECTED'
+      confidence: isCoffee ? 99 : 5,
+      reason: isCoffee ? `✓ ${reasonText}` : `✗ ${reasonText}`
     };
 
   } catch (error) {
     console.error('Gemini Vision error:', error);
-    // FAIL-CLOSED: Reject on network error
-    return { isCoffee: false, confidence: 0, reason: 'NETWORK_ERROR_NO_SCAN' };
+    return { isCoffee: false, confidence: 0, reason: 'BAĞLANTI HATASI: TARAMA YAPILAMADI' };
   }
 }
