@@ -2,20 +2,8 @@ const fs = require('fs');
 const filePath = 'src/App.tsx';
 let content = fs.readFileSync(filePath, 'utf8');
 
-// 1. Fix imports (Remove validateCoffeeCup AND add geminiValidateCoffeeCup)
-content = content.replace(
-    /import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from '\.\/data\/imageAnalysis'/,
-    "import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'\nimport { geminiValidateCoffeeCup } from './data/geminiVision'"
-);
-
-// 2. Add geminiStatus state
-const stateMarker = 'const [randomFactIndices, setRandomFactIndices] = useState<number[]>([0, 1, 2]);';
-if (content.includes(stateMarker) && !content.includes('geminiStatus')) {
-    content = content.replace(stateMarker, stateMarker + '\n  const [geminiStatus, setGeminiStatus] = useState<string>("");');
-}
-
-// 3. Replace startAnalysis logic COMPLETELY
-const onloadMarker = '    img.onload = () => {';
+// 1. Update startAnalysis to 512px resolution and pass raw Base64 to Gemini
+const onloadMarker = '    img.onload = async () => {';
 const nextStepMarker = '    img.onerror = () => {';
 
 const startIdx = content.indexOf(onloadMarker);
@@ -28,17 +16,20 @@ if (startIdx !== -1 && endIdx !== -1) {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, 512, 512);
 
-      // Step 1: Send image to Gemini 2.0 AI for high-res validation
-      setGeminiStatus('🕵️ Gemini 2.0 Analiz Ediyor...');
-      const geminiResult = await geminiValidateCoffeeCup(previewUrl!);
+      // Step 1: Send high-res Base64 to Gemini AI for validation
+      setGeminiStatus('🕵️ Yapay Zeka Taranıyor...');
+      // Convert canvas to base64 (jpeg for smaller size)
+      const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      
+      const geminiResult = await geminiValidateCoffeeCup(base64Data);
       setGeminiStatus(geminiResult.reason);
-      console.log('[Gemini 2.0 Decision]:', geminiResult);
+      console.log('[Gemini Guard Decision]:', geminiResult);
 
       // Step 2: Wait for scanning animation (min 3.2s feel)
       await new Promise(resolve => setTimeout(resolve, 3200));
 
       if (!geminiResult.isCoffee) {
-        // Strike system - Rejection by Gemini 2.0
+        // Strike system
         const strikes = (currentUser.warnings || 0) + 1;
         const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
@@ -74,18 +65,5 @@ if (startIdx !== -1 && endIdx !== -1) {
     content = content.substring(0, startIdx) + newOnload + content.substring(endIdx);
 }
 
-// 4. Update UI to show geminiStatus
-if (!content.includes('Gemini AI Guard Status:')) {
-    const uiMarker = '<div style={{height:\'100%\', background:\'linear-gradient(90deg, #D4AF37, #FFDF73)\', borderRadius:\'2px\', animation:\'progressFill 3.2s cubic-bezier(0.4,0,0.2,1) forwards\'}}></div>';
-    if (content.includes(uiMarker)) {
-        const progressBarEnd = content.indexOf('</div>', content.indexOf(uiMarker)) + 6;
-        const uiInjection = `\n                  <div style={{marginTop:'1.5rem', padding:'1rem', background:'rgba(212,175,55,0.1)', borderRadius:'12px', border:'1px solid rgba(212,175,55,0.2)', animation:'fadeUpIn 0.5s ease 1s both'}}>
-                    <div style={{fontSize:'0.65rem', color:'#D4AF37', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.3rem', fontWeight:800}}>Gemini AI Guard Status:</div>
-                    <div style={{fontSize:'0.9rem', color:'#fff', fontWeight:600}}>{geminiStatus || 'Neural Syncing...'}</div>
-                  </div>`;
-        content = content.substring(0, progressBarEnd) + uiInjection + content.substring(progressBarEnd);
-    }
-}
-
 fs.writeFileSync(filePath, content, 'utf8');
-console.log('App.tsx final surgical update done.');
+console.log('App.tsx Base64 refactor done.');

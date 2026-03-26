@@ -244,13 +244,16 @@ export default function App() {
     img.src = previewUrl;
     img.onload = async () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 200; canvas.height = 200;
+      canvas.width = 512; canvas.height = 512;
       const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, 200, 200);
+      ctx.drawImage(img, 0, 0, 512, 512);
 
-      // Step 1: Send image to Gemini AI for real validation (Hardened Mode)
+      // Step 1: Send high-res Base64 to Gemini AI for validation
       setGeminiStatus('🕵️ Yapay Zeka Taranıyor...');
-      const geminiResult = await geminiValidateCoffeeCup(previewUrl!);
+      // Convert canvas to base64 (jpeg for smaller size)
+      const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      
+      const geminiResult = await geminiValidateCoffeeCup(base64Data);
       setGeminiStatus(geminiResult.reason);
       console.log('[Gemini Guard Decision]:', geminiResult);
 
@@ -258,7 +261,7 @@ export default function App() {
       await new Promise(resolve => setTimeout(resolve, 3200));
 
       if (!geminiResult.isCoffee) {
-        // Strike system - Rejection by Gemini AI
+        // Strike system
         const strikes = (currentUser.warnings || 0) + 1;
         const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
@@ -274,7 +277,7 @@ export default function App() {
         return;
       }
 
-      // Step 3: Gemini confirmed coffee! Proceed with fortune generation
+      // Step 3: Proceed with fortune generation
       const sig = analyzeImage(canvas, ctx);
       const result = generateUniqueFortune(sig, lang, Date.now());
       setAiResult(result);
