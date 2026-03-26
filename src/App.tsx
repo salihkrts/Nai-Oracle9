@@ -90,6 +90,7 @@ export default function App() {
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [mood, setMood] = useState<Mood>(null);
   const [randomFactIndices, setRandomFactIndices] = useState<number[]>([0, 1, 2]);
+  const [geminiStatus, setGeminiStatus] = useState<string>("");
 
   const [reviews, setReviews] = useState<any[]>(() => {
     const saved = lsGet('nai_reviews', null);
@@ -247,15 +248,17 @@ export default function App() {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(img, 0, 0, 200, 200);
 
-      // Step 1: Send image to Gemini AI for real validation
+      // Step 1: Send image to Gemini AI for real validation (Hardened Mode)
+      setGeminiStatus('🕵️ Yapay Zeka Taranıyor...');
       const geminiResult = await geminiValidateCoffeeCup(previewUrl!);
-      console.log('[Gemini AI Decision]:', geminiResult);
+      setGeminiStatus(geminiResult.reason);
+      console.log('[Gemini Guard Decision]:', geminiResult);
 
-      // Step 2: Wait for scanning animation
+      // Step 2: Wait for scanning animation (min 3.2s feel)
       await new Promise(resolve => setTimeout(resolve, 3200));
 
       if (!geminiResult.isCoffee) {
-        // Strike system - Gemini says this is NOT coffee
+        // Strike system - Rejection by Gemini AI
         const strikes = (currentUser.warnings || 0) + 1;
         const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
@@ -271,7 +274,7 @@ export default function App() {
         return;
       }
 
-      // Step 3: Gemini confirmed coffee! Generate fortune.
+      // Step 3: Gemini confirmed coffee! Proceed with fortune generation
       const sig = analyzeImage(canvas, ctx);
       const result = generateUniqueFortune(sig, lang, Date.now());
       setAiResult(result);
@@ -570,6 +573,10 @@ export default function App() {
                  ))}
                  <div style={{marginTop:'1rem', height:'3px', background:'rgba(255,255,255,0.1)', borderRadius:'2px', overflow:'hidden'}}>
                    <div style={{height:'100%', background:'linear-gradient(90deg, #D4AF37, #FFDF73)', borderRadius:'2px', animation:'progressFill 3.2s cubic-bezier(0.4,0,0.2,1) forwards'}}></div>
+                  <div style={{marginTop:'1.5rem', padding:'1rem', background:'rgba(212,175,55,0.1)', borderRadius:'12px', border:'1px solid rgba(212,175,55,0.2)', animation:'fadeUpIn 0.5s ease 1.2s both'}}>
+                    <div style={{fontSize:'0.65rem', color:'#D4AF37', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.3rem', fontWeight:800}}>Gemini AI Guard Status:</div>
+                    <div style={{fontSize:'0.9rem', color:'#fff', fontWeight:600}}>{geminiStatus || 'Neural Syncing...'}</div>
+                  </div>
                  </div>
                </div>
              </div>
