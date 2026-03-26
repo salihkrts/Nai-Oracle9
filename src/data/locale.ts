@@ -52,7 +52,20 @@ export const content: Record<string, any> = {
       p: 'Sistemdeki en gelişmiş yapay zeka haritaları.',
       pe: 'Üst düzey özellikler ve sınırsız deneyim.',
       e: 'Oracle dünyasındaki en prestijli ve sınırsız üyelik.'
-    }
+    },
+    
+    // Gift Center
+    giftTitle: 'Mistik Hediye Merkezi',
+    giftTabWheel: 'Şans Çarkı',
+    giftTabCups: 'Yıldızlı Fincan',
+    giftLockDesc: 'Bu kutsal oyunu bugün zaten oynadın. Yarın tekrar gel!',
+    giftWin: '[TEBRİKLER] {reward} kazandın!',
+    giftLose: 'Telve boş... Şansını bir sonraki sefere sakla.',
+    giftSpinBtn: 'ÇARKı ÇEVİR',
+    giftCupsBtn: 'Fincan Seç',
+    giftRewardCredits: '{n} Fal Hakkı',
+    giftRewardDiscount: '%{n} İndirim Kuponu',
+    giftRewardCategory: '{cat} Falı Kilidi'
   },
   en: {
     title: 'Nai Pro Coffee Reading', subtitle: 'Deep AI interpretation of hidden coffee symbols.',
@@ -107,7 +120,20 @@ export const content: Record<string, any> = {
       p: 'Most advanced AI fortune maps in the system.',
       pe: 'High-level features and infinite experience.',
       e: 'The most prestigious and limitless membership in Oracle.'
-    }
+    },
+
+    // Gift Center
+    giftTitle: 'Mystic Gift Center',
+    giftTabWheel: 'Wheel of Luck',
+    giftTabCups: 'Starry Cup',
+    giftLockDesc: 'You have already played this sacred game today. Return tomorrow!',
+    giftWin: '[CONGRATS] You won {reward}!',
+    giftLose: 'The grounds are empty... Keep your energy for next time.',
+    giftSpinBtn: 'SPIN THE WHEEL',
+    giftCupsBtn: 'Pick a Cup',
+    giftRewardCredits: '{n} Fortune Credits',
+    giftRewardDiscount: '%{n} Discount Coupon',
+    giftRewardCategory: '{cat} Fortune Unlock'
   },
   es: {
     title: 'Lectura Profesional Nai', subtitle: 'Interpretación profunda de la Inteligencia Artificial.',

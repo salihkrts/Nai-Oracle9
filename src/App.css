@@ -168,7 +168,115 @@ body::before {
 .mini-btn.delete { background: rgba(230, 57, 70, 0.1); color: #ff4d4d; border-color: rgba(230, 57, 70, 0.3); }
 .mini-btn.delete:hover { background: rgba(230, 57, 70, 0.2); transform: scale(1.02); box-shadow: 0 5px 15px rgba(230, 57, 70, 0.2); }
 
-/* -- MAIN LAYOUT -- */
+/* --- Gift Center & Mini Games --- */
+.gift-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center; z-index: 5000;
+  animation: fadeIn 0.4s ease;
+}
+
+.gift-modal {
+  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+  width: 90%; max-width: 650px; border-radius: 24px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 20px rgba(212, 175, 55, 0.1);
+  padding: 2rem; position: relative; overflow: hidden;
+}
+
+.gift-tabs {
+  display: flex; gap: 1rem; margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;
+}
+
+.gift-tab {
+  padding: 0.8rem 1.5rem; border-radius: 12px; cursor: pointer;
+  transition: all 0.3s ease; color: rgba(255,255,255,0.5);
+  font-weight: 600; font-size: 0.9rem;
+}
+
+.gift-tab.active {
+  background: rgba(212, 175, 55, 0.15); color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* Wheel of Fortune */
+.wheel-container {
+  position: relative; width: 320px; height: 320px; margin: 0 auto;
+  perspective: 1000px;
+}
+
+.wheel-outer {
+  width: 100%; height: 100%; border-radius: 50%;
+  border: 8px solid #D4AF37; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+  position: relative; transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1);
+  transform-style: preserve-3d; background: #000;
+}
+
+.wheel-pointer {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 40px; z-index: 10;
+  filter: drop-shadow(0 0 10px #D4AF37);
+}
+
+.wheel-segment {
+  position: absolute; top: 0; left: 50%; width: 50%; height: 50%;
+  transform-origin: 0% 100%; border-left: 2px solid rgba(212, 175, 55, 0.2);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 20px; font-size: 0.6rem; color: #fff; font-weight: 800;
+  text-align: center; white-space: pre-wrap;
+}
+
+/* Starry Cups */
+.cups-container {
+  display: flex; justify-content: space-around; gap: 1rem; margin-top: 2rem;
+}
+
+.cup-item {
+  width: 70px; cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative; animation: antiGravityFloat 3s ease-in-out infinite;
+}
+
+.cup-item:hover { transform: scale(1.1) translateY(-10px); }
+
+.cup-selected { transform: translateY(-80px) rotate(-15deg) !important; animation: none !important; }
+
+.cup-star {
+  position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 40px; background: radial-gradient(circle, #FFDF73, #D4AF37);
+  border-radius: 50%; box-shadow: 0 0 20px #D4AF37; display: none;
+}
+
+.show-star .cup-star { display: block; animation: starPulse 1.5s infinite; }
+
+@keyframes antiGravityFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes starPulse {
+  0% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+  50% { transform: translateX(-50%) scale(1.4); filter: brightness(1.5); }
+  100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+}
+
+.spinning { transition: none !important; }
+
+.gift-hint {
+  text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.4);
+  margin-top: 2rem; font-style: italic;
+}
+
+.gift-btn-spin {
+  display: block; width: 100%; background: linear-gradient(90deg, #D4AF37, #FFDF73);
+  color: #000; border: none; padding: 1rem; border-radius: 12px;
+  font-weight: 800; font-size: 1rem; cursor: pointer;
+  margin-top: 2rem; transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.gift-btn-spin:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+.gift-btn-spin:hover:not(:disabled) { transform: scale(1.02); filter: brightness(1.1); }
 .layout-main {
   flex: 1;
   display: flex;
