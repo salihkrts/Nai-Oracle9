@@ -82,23 +82,23 @@ export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; conf
      return { isValid: false, confidence: 10, reason: 'AŞIRI_PARLAK_YÜZEY (Kağıt veya boş ekran olabilir)' };
   }
 
-  // B. SCORING CRITERIA (Stricter thresholds for V4.0)
+  // B. SCORING CRITERIA (Calibrated for V4.1 Goldilocks Zone)
   
-  const isDarkEnough = sig.darkScore > 0.35;        // Grounds should cover significant area
-  const hasCircularForm = sig.circularityScore > 0.12; // Strong rim detection
-  const hasTexture = sig.textureScore > 0.45;        // Grounds must be complex/grainy
-  const hasContrast = sig.edgeContrast > 0.06;       // Sharp transition between cup and grounds
+  const isDarkEnough = sig.darkScore > 0.28;        // Lighter grounds/bright rooms OK
+  const hasCircularForm = sig.circularityScore > 0.08; // Non-perfect camera angles OK
+  const hasTexture = sig.textureScore > 0.38;        // Smoother grounds OK
+  const hasContrast = sig.edgeContrast > 0.05;       // Soft focus OK
   const hasWarmTones = sig.warmScore > 0.08;         // Brown/Amber tones presence
-  const hasCenterDensity = sig.centerDensity > 0.45;  // Core should be coffee-dense
-  const hasEntropy = sig.entropy > 0.12;             // High local complexity
+  const hasCenterDensity = sig.centerDensity > 0.35;  // Standard center weight
+  const hasEntropy = sig.entropy > 0.10;             // Base complexity
 
   // Calculate weighted score
   const criteria = [isDarkEnough, hasCircularForm, hasTexture, hasContrast, hasWarmTones, hasCenterDensity, hasEntropy];
   const passedCount = criteria.filter(Boolean).length;
   const confidence = Math.round((passedCount / criteria.length) * 100);
 
-  // Must pass at least 5 out of 7 criteria in V4.0
-  if (passedCount < 5) {
+  // Must pass at least 4 out of 7 criteria in V4.1 (Lowered from 5/7)
+  if (passedCount < 4) {
     const reasons = [
       !isDarkEnough ? 'KARANLIK_SEVİYESİ_DÜŞÜK' : null,
       !hasCircularForm ? 'DAİRESEL_FORM_YETERSİZ' : null,
@@ -113,8 +113,8 @@ export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; conf
   }
 
   // Final verification score boost for very clear matches
-  const finalConf = Math.min(99, 88 + Math.floor(seededRandom(sig.seed, 11) * 11));
-  return { isValid: true, confidence: finalConf, reason: 'V4.0_SAĞLIKLI_TARAMA_TAMAMLANDI' };
+  const finalConf = Math.min(99, 85 + Math.floor(seededRandom(sig.seed, 11) * 14));
+  return { isValid: true, confidence: finalConf, reason: 'V4.1_KALİBRE_EDİLMİŞ_TARAMA_TAMAMLANDI' };
 }
 
 export function generateUniqueFortune(sig: ImageSignature, lang: string, timeSalt: number = 0): { fortune: string; highlights: any[] } {
