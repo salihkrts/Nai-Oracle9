@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
-import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'
+import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
 import { geminiValidateCoffeeCup } from './data/geminiVision'
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
@@ -258,19 +258,35 @@ export default function App() {
       setGeminiStatus(geminiResult.reason);
       console.log('[AI Decision]:', geminiResult);
 
+      // Step 2: Hybrid Fallback — If AI fails or rejects, check locally
+      const sig = analyzeImage(canvas, ctx);
+      const localResult = validateCoffeeCup(sig);
+
+      if (!geminiResult.isCoffee && !isAdmin) {
+        if (localResult.isValid && localResult.passedCount >= 6) {
+          console.log('[Hybrid Guard]: Gemini rejected, but Local Vision is highly confident (6+ flags).');
+          // Overwrite rejection if local vision is VERY confident
+          geminiResult.isCoffee = true;
+          geminiResult.confidence = localResult.confidence;
+          geminiResult.reason = 'LOCAL_VISION_MATCH (HIGH_CONFIDENCE)';
+          setGeminiStatus('✅ Local Vision Onayladı (Yüksek Güven)');
+        }
+      }
+
       await new Promise(resolve => setTimeout(resolve, 3200));
 
       if (!geminiResult.isCoffee && !isAdmin) {
         // Strike system (Skip for Admin)
         const strikes = (currentUser.warnings || 0) + 1;
-        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
+        // Increased strike limit to 10 for a'daha rahat' experience
+        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 10 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
         setUsers(allUsers); lsSet('nai_users', allUsers);
         setCurrentUser(updatedUser); lsSet('nai_current_user', updatedUser);
 
         setStage('upload');
-        if (strikes >= 3) {
-          addToast(t.errNotCoffee(3, geminiResult.confidence), 'error');
+        if (strikes >= 10) {
+          addToast(t.errNotCoffee(10, geminiResult.confidence), 'error');
         } else {
           setError(t.errNotCoffee(strikes, geminiResult.confidence));
         }
@@ -282,7 +298,6 @@ export default function App() {
         console.warn('AI failed but Admin bypass active.');
       }
 
-      const sig = analyzeImage(canvas, ctx);
       const result = generateUniqueFortune(sig, lang, Date.now());
       setAiResult(result);
       setLuckyNumbers(getLuckyNumbers(sig.seed));

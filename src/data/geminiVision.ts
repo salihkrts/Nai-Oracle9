@@ -22,8 +22,12 @@ export async function geminiValidateCoffeeCup(base64Image: string): Promise<Gemi
             text: `Sen bir "Mistik Kahve Falı" uzmanısın. İlk görevin bu fotoğrafın falan bakmaya UYGUN olup olmadığını anlamak.
 Fotoğrafta şunları ara:
 1. Türk Kahvesi fincanı (ters çevrilmiş, dik veya iç tarafı görünen).
-2. Kahve telveleri (cup interior or plate).
-3. Görüntü çok bulanık veya karanlık olsa bile, eğer kahve fincanı olduğuna dair bir kanıt varsa onay ver.
+2. Kahve telveleri (fincan içi veya tabak).
+
+ÖNEMLİ KRİTERLER:
+- Odun, tahta yığını, masa yüzeyi, parke veya inşaat malzemesi gibi DOKULU ama fincan olmayan şeyleri KESİNLİKLE REDDET.
+- İnsan yüzü, vücut parçası veya manzara fotoğraflarını REDDET.
+- Görüntü bulanık olsa bile bir fincan yapısı (daire, kulp, tabak) seçilebiliyorsa onay verebilirsin.
 
 KURALLAR:
 - Uygunsa: "YES - [Kısa onay]"
@@ -56,7 +60,8 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
         errDetail = response.statusText;
       }
       console.error('Gemini API error:', response.status, errDetail);
-      return { isCoffee: false, confidence: 0, reason: `HATA: ${response.status} (${errDetail.slice(0, 20)}...)` };
+      // Fallback confidence to avoid 0% match block
+      return { isCoffee: false, confidence: 50, reason: `HATA: ${response.status} (HIZMET DISI)` };
     }
 
     const data = await response.json();
@@ -75,6 +80,6 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
 
   } catch (error) {
     console.error('Gemini Vision error:', error);
-    return { isCoffee: false, confidence: 0, reason: 'BAĞLANTI HATASI' };
+    return { isCoffee: false, confidence: 40, reason: 'BAĞLANTI HATASI (YEREL TARAMA)' };
   }
 }

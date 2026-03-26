@@ -61,13 +61,13 @@ function seededRandom(seed: number, index: number): number {
   return x - Math.floor(x);
 }
 
-export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; confidence: number; reason: string } {
+export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; confidence: number; reason: string; passedCount: number } {
   // === VISION ENGINE V5.0 — POWERED BY LLAMA NEURAL (SIMULATION) ===
   
   // 1. Safety Check: Only reject if the image is effectively BLANK (e.g., pure white)
   const avgBright = (sig.topLeftBrightness + sig.topRightBrightness + sig.bottomLeftBrightness + sig.bottomRightBrightness) / 4;
   if (avgBright > 0.96) {
-     return { isValid: false, confidence: 5, reason: 'SYSTEM_ERROR: BLANK_SURFACE_DETECTED' };
+     return { isValid: false, confidence: 5, reason: 'SYSTEM_ERROR: BLANK_SURFACE_DETECTED', passedCount: 0 };
   }
 
   // 2. NEURAL EVALUATION (Extremely Lenient Calibration)
@@ -82,14 +82,14 @@ export function validateCoffeeCup(sig: ImageSignature): { isValid: boolean; conf
   const criteria = [isDarkEnough, hasCircularForm, hasTexture, hasContrast, hasWarmTones, hasCenterDensity, hasEntropy];
   const passedCount = criteria.filter(Boolean).length;
 
-  // 3. NEURAL DECISION (Requires only 1 out of 7 - Effectively 100% for real photos)
-  if (passedCount < 1) {
-    return { isValid: false, confidence: 15, reason: 'LLAMA_NEURAL: LOW_SIGNAL' };
+  // 3. NEURAL DECISION (Require at least 4 out of 7 criteria for better precision)
+  if (passedCount < 4) {
+    return { isValid: false, confidence: 15, reason: 'LLAMA_NEURAL: INSUFFICIENT_PATTERNS', passedCount };
   }
 
   // Generate high confidence for valid Neural matches
   const finalConf = Math.min(99, 88 + Math.floor(seededRandom(sig.seed, 11) * 11));
-  return { isValid: true, confidence: finalConf, reason: 'LLAMA_NEURAL_CALIBRATION_SUCCESS' };
+  return { isValid: true, confidence: finalConf, reason: 'LLAMA_NEURAL_CALIBRATION_SUCCESS', passedCount };
 }
 
 export function generateUniqueFortune(sig: ImageSignature, lang: string, timeSalt: number = 0): { fortune: string; highlights: any[] } {
