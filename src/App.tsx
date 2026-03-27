@@ -24,6 +24,7 @@ interface User {
   dailyRewardGraceUsed?: boolean;
   lastDailyRewardTimestamp?: number;
   avatar_url?: string;
+  gender?: 'male' | 'female' | 'other';
   rank?: string;
 }
 interface PastFortune { id: string; username: string; date: string; fortune: string; highlights: any[]; imageUrl: string; mood?: string; }
@@ -83,6 +84,31 @@ const EyeOffIcon = () => (
   </svg>
 );
 
+const GoldenGenderIcon = ({ gender, className = '' }: { gender?: 'male' | 'female' | 'other', className?: string }) => {
+  const isFemale = gender === 'female';
+  const isOther = gender === 'other';
+  return (
+    <svg className={`golden-gender-icon ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FBBC05" />
+          <stop offset="50%" stopColor="#D4AF37" />
+          <stop offset="100%" stopColor="#C5A028" />
+        </linearGradient>
+      </defs>
+      {isFemale ? (
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
+      ) : isOther ? (
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
+      ) : (
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
+      )}
+      {isFemale && <circle cx="12" cy="18" r="1.5" fill="#fff" opacity="0.5" />}
+    </svg>
+  );
+};
+
+
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [lang, setLang] = useState<LangCode>('tr');
@@ -112,7 +138,7 @@ export default function App() {
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login'|'register'|'forgot'>('login');
-  const [authInp, setAuthInp] = useState({ user: '', pass: '', confirmPass: '', birthDate: '', luckyWord: '', consent: false });
+  const [authInp, setAuthInp] = useState({ user: '', pass: '', confirmPass: '', birthDate: '', luckyWord: '', gender: 'male' as 'male'|'female'|'other', consent: false });
   const [showPass, setShowPass] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -444,7 +470,7 @@ export default function App() {
         tier: 'free', 
         isBanned: false,
         birthDate: authInp.birthDate,
-        luckyWord: authInp.luckyWord,
+        luckyWord: authInp.luckyWord, gender: authInp.gender,
         horoscope
       };
       
@@ -1054,9 +1080,10 @@ export default function App() {
                     {currentUser.avatar_url ? (
                       <img src={currentUser.avatar_url} alt="avatar" className="profile-avatar-img" />
                     ) : (
-                      <div className="avatar-placeholder">
-                         <span className="placeholder-icon">👤</span>
-                      </div>
+                      
+                            <div className="avatar-placeholder gold-aura">
+                              <GoldenGenderIcon gender={currentUser.gender} className="placeholder-svg-gold" />
+                            </div>
                     )}
                  </div>
                  <input 
@@ -1103,7 +1130,7 @@ export default function App() {
                       { label: 'Tier', value: currentUser.tier.toUpperCase() },
                       { label: 'Toplam Fal', value: pastFortunes.filter(f=>f.username===currentUser.username).length },
                     ].map((row, i) => (
-                      <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none'}}>
+                      <div key={i} className="info-row-animate" style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none', animationDelay: `${i * 0.15}s`}}>
                         <span style={{opacity:0.6, fontSize:'0.9rem'}}>{row.label}</span>
                         <strong className={(row as any).danger ? 'pulse-error' : ''} style={{color: (row as any).danger ? '#ff4d4d' : '#D4AF37'}}>{row.value}</strong>
                       </div>
@@ -1252,6 +1279,32 @@ export default function App() {
                       <div style={{marginBottom:'2.5rem'}}>
                         <input placeholder="Şanslı Kelimeniz" value={authInp.luckyWord} onChange={e=>setAuthInp({...authInp, luckyWord: e.target.value})} className="auth-input" style={{marginBottom:'0.4rem'}} />
                         <div style={{color:'#D4AF37', fontSize:'0.75rem', marginLeft:'0.5rem', fontWeight:500}}>Mistik şanslı kelimenizi asla unutmayın; şifrenizi kurtarmanın tek yolu budur!</div>
+                      <div className="gender-selection" style={{marginBottom:'2.5rem'}}>
+                        <div style={{fontSize:'0.75rem', color:'#D4AF37', marginBottom:'0.8rem', marginLeft:'0.5rem', fontWeight:600}}>Cinsiyetiniz</div>
+                        <div style={{display:'flex', gap:'0.8rem'}}>
+                          {(['male', 'female', 'other'] as const).map(g => (
+                            <button 
+                              key={g} 
+                              type="button" 
+                              className={`gender-btn ${authInp.gender === g ? 'active' : ''}`}
+                              onClick={() => setAuthInp({...authInp, gender: g})}
+                              style={{
+                                flex: 1, 
+                                padding: '0.8rem', 
+                                borderRadius: '12px', 
+                                background: authInp.gender === g ? 'rgba(212, 175, 55, 0.2)' : 'rgba(0,0,0,0.3)',
+                                border: `1px solid ${authInp.gender === g ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)'}`,
+                                color: authInp.gender === g ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                                fontSize: '0.85rem',
+                                transition: '0.3s',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {g === 'male' ? '👤 Erkek' : g === 'female' ? '🌸 Kadın' : '🌈 Diğer'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       </div>
                     </>
                   )}
