@@ -850,3 +850,129 @@ body::before {
   font-family: 'Poppins', sans-serif;
   letter-spacing: 1px;
 }
+
+/* Destiny Path (Kader Yolu) */
+.destiny-map {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background: radial-gradient(circle at center, rgba(212,175,55,0.05) 0%, transparent 70%);
+  border-radius: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  border: 1px solid rgba(212,175,55,0.1);
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.destiny-path-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1500px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.destiny-nodes {
+  display: flex;
+  gap: 50px;
+  padding: 20px 0;
+  position: relative;
+  z-index: 2;
+  width: 1500px;
+}
+
+.destiny-node {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.node-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #111;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  transition: 0.4s;
+}
+
+.destiny-node.completed .node-circle {
+  border-color: #D4AF37;
+  color: #D4AF37;
+  background: rgba(212,175,55,0.1);
+  box-shadow: 0 0 15px rgba(212,175,55,0.4);
+}
+
+.destiny-node.active .node-circle {
+  border-color: #FFDF73;
+  color: #111;
+  background: #FFDF73;
+  transform: scale(1.2);
+  box-shadow: 0 0 25px #FFDF73;
+}
+
+.node-reward {
+  position: absolute;
+  bottom: -25px;
+  font-size: 0.65rem;
+  color: #D4AF37;
+  white-space: nowrap;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.destiny-claim-btn {
+  margin-top: 2rem;
+  padding: 1.2rem 3rem;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #FFDF73, #D4AF37);
+  color: #111;
+  border: none;
+  border-radius: 50px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+  transition: 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.destiny-claim-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Particles for Destiny claim */
+@keyframes particle-out {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+}
+
+.claiming-particles {
+  position: absolute;
+  top: 50%; left: 50%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: #FFDF73;
+  border-radius: 50%;
+  animation: particle-out 1.2s forwards ease-out;
+}

@@ -33,6 +33,18 @@ export const content: Record<string, any> = {
     noSavedNotes: 'Henüz kaydedilmiş bir fısıltınız bulunmuyor.',
     dailyNoteBoxTitle: 'Günün Mistik Fısıltısı',
     whisperLabel: 'Fısıltı',
+    giftCenterBtn: 'Hediye',
+    giftCenterTitle: 'Mistik Hediye Merkezi',
+    wheelTitle: 'Şans Çarkı',
+    cupTitle: 'Yıldızlı Fincan',
+    spinBtn: 'Çevir',
+    cupHint: 'Yıldızın olduğu fincanı bul!',
+    toastWelcome: "Hoş geldin, {u}! Yıldızlar senin için parlıyor.",
+    toastProcessed: "İşlemin başarıyla tamamlandı.",
+    toastAlreadySaved: "Bu fısıltı zaten arşivinde kayıtlı.",
+    toastSaved: "Fısıltı rehberine eklendi.",
+    toastSent: "Mesajın temsilciye ulaştırıldı.",
+    errMoodRequired: "Lütfen şu anki ruh halini seç (😔🤔😊🔥)",
     
     storeBasic: 'Temel Tarama', storeSupreme: 'Yüksek Paket', storeLove: 'Aşk & Uyum Falı', storeCareer: 'Kariyer & Para', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
@@ -52,20 +64,7 @@ export const content: Record<string, any> = {
       p: 'Sistemdeki en gelişmiş yapay zeka haritaları.',
       pe: 'Üst düzey özellikler ve sınırsız deneyim.',
       e: 'Oracle dünyasındaki en prestijli ve sınırsız üyelik.'
-    },
-    
-    // Gift Center
-    giftTitle: 'Mistik Hediye Merkezi',
-    giftTabWheel: 'Şans Çarkı',
-    giftTabCups: 'Yıldızlı Fincan',
-    giftLockDesc: 'Bu kutsal oyunu bugün zaten oynadın. Yarın tekrar gel!',
-    giftWin: '[TEBRİKLER] {reward} kazandın!',
-    giftLose: 'Telve boş... Şansını bir sonraki sefere sakla.',
-    giftSpinBtn: 'ÇARKı ÇEVİR',
-    giftCupsBtn: 'Fincan Seç',
-    giftRewardCredits: '{n} Fal Hakkı',
-    giftRewardDiscount: '%{n} İndirim Kuponu',
-    giftRewardCategory: '{cat} Falı Kilidi'
+    }
   },
   en: {
     title: 'Nai Pro Coffee Reading', subtitle: 'Deep AI interpretation of hidden coffee symbols.',
@@ -101,6 +100,18 @@ export const content: Record<string, any> = {
     noSavedNotes: 'You have no saved whispers yet.',
     dailyNoteBoxTitle: 'Mystic Whisper of the Day',
     whisperLabel: 'Whisper',
+    giftCenterBtn: 'Gift',
+    giftCenterTitle: 'Mystic Gift Center',
+    wheelTitle: 'Wheel of Fortune',
+    cupTitle: 'Starry Cup',
+    spinBtn: 'Spin',
+    cupHint: 'Find the cup with the star!',
+    toastWelcome: "Welcome, {u}! The stars are shining for you.",
+    toastProcessed: "Your transaction was successful.",
+    toastAlreadySaved: "This whisper is already in your archive.",
+    toastSaved: "Whisper saved to your guide.",
+    toastSent: "Your message has been sent to support.",
+    errMoodRequired: "Please select your current mood (😔🤔😊🔥)",
     
     storeBasic: 'Basic Scan', storeSupreme: 'Supreme Pack', storeLove: 'Love & Romance', storeCareer: 'Career Path', storePremium: 'NAI Premium', storePremiumExtra: 'Premium Extra', storeElite: 'Oracle Elite',
     storeFeatures: { 
@@ -120,20 +131,7 @@ export const content: Record<string, any> = {
       p: 'Most advanced AI fortune maps in the system.',
       pe: 'High-level features and infinite experience.',
       e: 'The most prestigious and limitless membership in Oracle.'
-    },
-
-    // Gift Center
-    giftTitle: 'Mystic Gift Center',
-    giftTabWheel: 'Wheel of Luck',
-    giftTabCups: 'Starry Cup',
-    giftLockDesc: 'You have already played this sacred game today. Return tomorrow!',
-    giftWin: '[CONGRATS] You won {reward}!',
-    giftLose: 'The grounds are empty... Keep your energy for next time.',
-    giftSpinBtn: 'SPIN THE WHEEL',
-    giftCupsBtn: 'Pick a Cup',
-    giftRewardCredits: '{n} Fortune Credits',
-    giftRewardDiscount: '%{n} Discount Coupon',
-    giftRewardCategory: '{cat} Fortune Unlock'
+    }
   },
   es: {
     title: 'Lectura Profesional Nai', subtitle: 'Interpretación profunda de la Inteligencia Artificial.',

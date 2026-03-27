@@ -85,6 +85,7 @@ function App() {
   const [cupsFlipped, setCupsFlipped] = useState<boolean[]>(new Array(6).fill(false));
   const [cupStarIndex, setCupStarIndex] = useState<number>(-1);
   const [cupAttempts, setCupAttempts] = useState(0);
+  const [claimingDay, setClaimingDay] = useState<number | null>(null);
   const [cooldowns, setCooldowns] = useState({ wheel: 0, cups: 0, destiny: 0 });
 
   const [reviews, setReviews] = useState<any[]>(() => {
@@ -201,11 +202,72 @@ function App() {
     addToast(t.toastReviewSubbed || 'Yorumunuz gönderildi!');
   };
 
-  const getDailyWhisper = () => {
-    const seed = new Date().toLocaleDateString();
-    let hash = 0; for(let i=0; i<seed.length; i++) hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-    const arr = mysticWhispers[lang as keyof typeof mysticWhispers] || mysticWhispers['en'];
-    return arr[Math.abs(hash) % arr.length];
+  const getDestinyReward = (day: number) => {
+    const base = day <= 5 ? 1 : day <= 10 ? 2 : day <= 15 ? 3 : day <= 20 ? 5 : day <= 25 ? 10 : 25;
+    return { 
+      amount: base, 
+      extra: day % 7 === 0 ? '1 Free Spin 🎡' : null 
+    };
+  };
+
+  const handleClaimDestinyReward = () => {
+    if (!currentUser) return;
+    
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const lastClaimStr = currentUser.lastDailyRewardDate;
+    
+    if (lastClaimStr === todayStr) {
+      addToast('Bugünkü kader ödülün zaten mühürlendi.', 'info');
+      return;
+    }
+
+    // Start particle animation and delay
+    const dayToClaim = (currentUser?.dailyRewardStreak || 0) + 1;
+    setClaimingDay(dayToClaim);
+    
+    setTimeout(() => {
+      let newStreak = (currentUser.dailyRewardStreak || 0) + 1;
+      let graceUsed = currentUser.dailyRewardGraceUsed || false;
+
+      if (lastClaimStr) {
+        const lastClaim = new Date(lastClaimStr);
+        const diffTime = now.getTime() - lastClaim.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 1) { 
+          if (diffDays === 2 && !graceUsed) {
+            graceUsed = true;
+            newStreak = (currentUser.dailyRewardStreak || 0) + 2; 
+            addToast('Bir gün fısıltıları duyamadın ama mühür devam ediyor...', 'info');
+          } else {
+            newStreak = 1;
+            graceUsed = false;
+            addToast('Seri bozuldu! Kader yoluna baştan başlıyorsun.', 'error');
+          }
+        }
+      }
+
+      if (newStreak > 30) {
+        newStreak = 1;
+        graceUsed = false;
+      }
+
+      const reward = getDestinyReward(newStreak);
+      
+      updateCurrentUser(u => ({
+        ...u,
+        credits: u.credits + reward.amount,
+        lastDailyRewardDate: todayStr,
+        lastDailyRewardTimestamp: Date.now(),
+        dailyRewardStreak: newStreak,
+        dailyRewardGraceUsed: graceUsed
+      }));
+
+      addLog(`Claimed Day ${newStreak} reward: ${reward.amount} CP`);
+      addToast(`Günün mühürlendi! Day ${newStreak} ödülü: ${reward.amount} CP.`, 'success');
+      setClaimingDay(null);
+    }, 1500); // 1.5s delay for animation
   };
 
   const saveDailyNote = () => {
