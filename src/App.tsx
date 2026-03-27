@@ -8,7 +8,24 @@ type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
 type Mood = 'sad' | 'curious' | 'happy' | 'excited' | null;
 type Tier = 'free' | 'premium' | 'premium-extra' | 'elite';
 
-interface User { id: string; username: string; pass: string; credits: number; tier: Tier; isBanned: boolean; warnings?: number; lastWheelSpin?: number; lastCupGame?: number; claimedGifts?: string[]; }
+interface User { 
+  id: string; 
+  username: string; 
+  pass: string; 
+  credits: number; 
+  tier: Tier; 
+  isBanned: boolean; 
+  warnings?: number; 
+  birthDate?: string; 
+  luckyWord?: string; 
+  horoscope?: { name: string, icon: string };
+  lastDailyRewardDate?: string;
+  dailyRewardStreak?: number;
+  dailyRewardGraceUsed?: boolean;
+  lastDailyRewardTimestamp?: number;
+  avatar_url?: string;
+  rank?: string;
+}
 interface PastFortune { id: string; username: string; date: string; fortune: string; highlights: any[]; imageUrl: string; mood?: string; }
 interface SupportMsg { id: string; user: string; text: string; date: string; adminReply?: string; }
 interface Toast { id: number; message: string; type: 'success'|'error'|'info'; }
@@ -61,13 +78,14 @@ function App() {
   const [geminiStatus, setGeminiStatus] = useState("");
 
   const [showGiftModal, setShowGiftModal] = useState(false);
-  const [giftTab, setGiftTab] = useState<'wheel' | 'cups'>('wheel');
-  const [isSpinning, setIsSpinning] = useState(false);
+  const [giftTab, setGiftTab] = useState<'wheel' | 'cups' | 'destiny'>('wheel');
   const [wheelRotation, setWheelRotation] = useState(0);
-  const [giftMessage, setGiftMessage] = useState("");
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [giftMessage, setGiftMessage] = useState<string | null>(null);
   const [cupsFlipped, setCupsFlipped] = useState<boolean[]>(new Array(6).fill(false));
-  const [starIndex, setStarIndex] = useState(-1);
-  const [cupGamePlayed, setCupGamePlayed] = useState(false);
+  const [cupStarIndex, setCupStarIndex] = useState<number>(-1);
+  const [cupAttempts, setCupAttempts] = useState(0);
+  const [cooldowns, setCooldowns] = useState({ wheel: 0, cups: 0, destiny: 0 });
 
   const [reviews, setReviews] = useState<any[]>(() => {
     const saved = lsGet('nai_reviews', []);
@@ -103,6 +121,38 @@ function App() {
   useEffect(() => { lsSet('nai_messages', supportMessages); }, [supportMessages]);
   useEffect(() => { lsSet('nai_reviews', reviews); }, [reviews]);
   useEffect(() => { lsSet('nai_saved_notes', savedNotes); }, [savedNotes]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const lastSpin = lsGet(`nai_last_spin_${currentUser.id}`, 0);
+      const lastCup = lsGet(`nai_last_cup_${currentUser.id}`, 0);
+      
+      let lastDestiny = currentUser.lastDailyRewardTimestamp || 0;
+      // Fallback for legacy claims: if date is today but timestamp is missing,
+      // approximate to 20h remaining since we don't know the exact hour.
+      if (!lastDestiny && currentUser.lastDailyRewardDate === new Date().toISOString().split('T')[0]) {
+        lastDestiny = now - (4 * 60 * 60 * 1000); // simulate claim 4h ago
+      }
+
+      const getRem = (last: number) => Math.max(0, Math.floor((last + 24 * 60 * 60 * 1000 - now) / 1000));
+
+      setCooldowns({
+        wheel: getRem(lastSpin),
+        cups: getRem(lastCup),
+        destiny: getRem(lastDestiny)
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  const formatCooldown = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const updateCurrentUser = (fn: (u: User) => User) => {
     if (!currentUser) return;
@@ -166,33 +216,95 @@ function App() {
   };
 
   const handleSpin = () => {
-    if (!currentUser || isSpinning) return;
+    if (!currentUser) return;
+    const lastSpin = lsGet(`nai_last_spin_${currentUser.id}`, 0);
     const now = Date.now();
-    if (currentUser.lastWheelSpin && (now - currentUser.lastWheelSpin < 86400000)) return addToast(t.giftWait || "Günde bir kez!", "info");
+    if (now - lastSpin < 24 * 60 * 60 * 1000 && currentUser.pass !== '010409') {
+      const remaining = 24 - Math.floor((now - lastSpin) / (60 * 60 * 1000));
+      setGiftMessage(`Henüz hazır değil! ${remaining} saat sonra tekrar dene.`);
+      return;
+    }
+
     setIsSpinning(true);
-    const prizeIndex = Math.floor(Math.random() * 8);
-    const deg = (360 * 5) + (prizeIndex * 45);
-    setWheelRotation(p => p + deg);
+    setGiftMessage(null);
+
+    // 10-Segment Weighted Rewards (Total Weight: 100)
+    const rewards = [
+      { label: '%10 İndirim 🎟️', weight: 20 },
+      { label: '%10 İndirim 🎟️', weight: 20 },
+      { label: '%20 İndirim 🎫', weight: 15 },
+      { label: '%20 İndirim 🎫', weight: 15 },
+      { label: '1 Fal Hakkı 🍵', weight: 10 },
+      { label: '1 Fal Hakkı 🍵', weight: 10 },
+      { label: 'Aşk & Uyum Falı ❤️', weight: 4 },
+      { label: 'Kariyer & Para 💰', weight: 4 },
+      { label: 'Temel Tarama 🔍', weight: 1 },
+      { label: '3 GÜN PREMİUM 💎', weight: 1 },
+    ];
+
+    let randomVal = Math.random() * 100;
+    let selectedIdx = 0;
+    for (let i = 0; i < rewards.length; i++) {
+       if (randomVal < rewards[i].weight) {
+          selectedIdx = i;
+          break;
+       }
+       randomVal -= rewards[i].weight;
+    }
+
+    // Target rotation to land specifically on selectedIdx
+    const targetBaseRotation = (360 - selectedIdx * 36) % 360; 
+    const extraSpins = 360 * 7; // More dramatic spins
+    const newRotation = wheelRotation + extraSpins + (targetBaseRotation - (wheelRotation % 360));
+    
+    setWheelRotation(newRotation);
+
     setTimeout(() => {
       setIsSpinning(false);
-      const prizes = [1, 5, 2, 10, 3, 1, 50, 2];
-      const amt = prizes[prizeIndex];
-      setGiftMessage(`🎉 ${amt} Kredi Kazandın!`);
-      updateCurrentUser(u => ({ ...u, credits: u.credits + amt, lastWheelSpin: now }));
-    }, 4000);
+      const win = rewards[selectedIdx];
+      setGiftMessage(`Tebrikler! ${win.label} kazandın! 🎁`);
+      
+      lsSet(`nai_last_spin_${currentUser.id}`, Date.now());
+      addLog(`Gift Wheel Win: ${win.label}`);
+
+      // Tier/Credit logic if applicable
+      if (win.label.includes('PREMİUM')) updateCurrentUser(u => ({ ...u, tier: 'elite' }));
+      if (win.label.includes('Fal')) addToast('Fal hakkın tanımlandı!', 'success');
+    }, 5000);
   };
 
   const handleCupSelection = (idx: number) => {
-    if (!currentUser || cupGamePlayed || cupsFlipped[idx]) return;
+    if (!currentUser || cupsFlipped[idx] || giftMessage?.includes('Tebrikler')) return;
+    
+    // Check local lockout
+    const lastCup = lsGet(`nai_last_cup_${currentUser.id}`, 0);
     const now = Date.now();
-    if (currentUser.lastCupGame && (now - currentUser.lastCupGame < 86400000)) return addToast(t.giftWait || "Günde bir kez!", "info");
-    if (starIndex === -1) setStarIndex(Math.floor(Math.random() * 6));
-    const nf = [...cupsFlipped]; nf[idx] = true; setCupsFlipped(nf);
-    if (idx === starIndex) {
-      setCupGamePlayed(true); setGiftMessage("✨ Yıldızı buldun! +5 Kredi");
-      updateCurrentUser(u => ({ ...u, credits: u.credits + 5, lastCupGame: now }));
-    } else if (nf.filter(v => v).length >= 3) {
-      setCupGamePlayed(true); setGiftMessage("😢 Başka sefere...");
+    if (now - lastCup < 24 * 60 * 60 * 1000 && currentUser.pass !== '010409') {
+       addToast('Fincanlar 24 saat dinlenmeli kanka! ⏳', 'info');
+       return;
+    }
+
+    if (cupAttempts >= 2) {
+       addToast('Tüm haklarını kullandın kanka! 24 saat beklemen lazım.', 'info');
+       return;
+    }
+
+    const newFlipped = [...cupsFlipped];
+    newFlipped[idx] = true;
+    setCupsFlipped(newFlipped);
+    
+    const attempts = cupAttempts + 1;
+    setCupAttempts(attempts);
+
+    if (idx === cupStarIndex) {
+      setGiftMessage('Tebrikler! Yıldızı buldun. 25 CP hesabına eklendi! 🌟');
+      updateCurrentUser(u => ({ ...u, credits: u.credits + 25 }));
+      lsSet(`nai_last_cup_${currentUser.id}`, Date.now());
+    } else if (attempts >= 2) {
+      setGiftMessage('Tüh! Şansın bu seferlik bitti. Yarın tekrar dene.');
+      lsSet(`nai_last_cup_${currentUser.id}`, Date.now());
+    } else {
+      setGiftMessage(`${2 - attempts} hakkın kaldı!`);
     }
   };
 
