@@ -165,6 +165,77 @@ function App() {
     setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
   };
 
+  const getRankFrameClass = (rank?: string) => {
+    if (!rank) return '';
+    if (rank === 'Altın Kahin') return 'frame-altin-kahin';
+    if (rank === 'Mistik Üstad') return 'frame-mistik-ustad';
+    if (rank === 'Göklerin Elçisi') return 'frame-goklerin-elcisi';
+    return '';
+  };
+
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return addToast('Fotoğraf 5MB\'dan büyük olamaz kanka.', 'error');
+    
+    try {
+      const optimized = await optimizeImage(file);
+      setAvatarPreview(optimized);
+      setShowAvatarModal(true);
+    } catch (err) {
+      addToast('Fotoğraf işlenirken bir hata oluştu.', 'error');
+    }
+  };
+
+  const handleAvatarConfirm = () => {
+    if (!avatarPreview) return;
+    updateCurrentUser(u => ({ ...u, avatar_url: avatarPreview }));
+    setShowAvatarModal(false);
+    setAvatarPreview(null);
+    addToast('Profil fotoğrafın güncellendi! 🧿', 'success');
+  };
+
+  const optimizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 400;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+          } else {
+            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/webp', 0.7));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const getDailyWhisper = () => {
+    const list = mysticWhispers[lang] || mysticWhispers['en'];
+    const dateStr = new Date().toISOString().split('T')[0];
+    const seed = (currentUser ? currentUser.id : 'anon') + dateStr;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+       hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+       hash |= 0;
+    }
+    const idx = Math.abs(hash) % list.length;
+    return list[idx];
+  };
+
   const addToast = useCallback((msg: string, type: Toast['type'] = 'success') => {
     const id = ++toastId.current;
     setToasts(p => [...p, { id, message: msg, type }]);
@@ -498,13 +569,44 @@ function App() {
         <div className="modal-overlay" onClick={()=>setShowProfile(false)}>
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'600px', maxHeight:'85vh'}}>
               <button className="modal-close-btn" onClick={()=>setShowProfile(false)}>✕</button>
-              <div style={{display:'flex', alignItems:'center', gap:'1.2rem', marginBottom:'1.5rem'}}><div style={{width:'60px', height:'60px', borderRadius:'50%', background:'linear-gradient(135deg, #D4AF37, #FFDF73)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, color:'#111', fontSize:'1.5rem'}}>{currentUser.username[0].toUpperCase()}</div><div><div style={{fontWeight:700, fontSize:'1.2rem'}}>{currentUser.username}</div><div style={{color:'#D4AF37', fontSize:'0.85rem'}}>{currentUser.tier} • {currentUser.credits} Krediler</div></div></div>
-              <div className="profile-tabs" style={{display:'flex', borderBottom:'1px solid #333', marginBottom:'1.5rem'}}>{(['info','history','daily'] as const).map(tab => (<button key={tab} className={profileTab===tab?'active':''} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'1rem', background:'transparent', border:'none', color:profileTab===tab?'#D4AF37':'#888'}}>{tab.toUpperCase()}</button>))}</div>
-              <div className="tab-content" style={{maxHeight:'400px', overflowY:'auto'}}>
-                {profileTab==='info' && <button className="btn-upload" style={{width:'100%', background:'#ff4d4d'}} onClick={handleLogout}>{t.logout}</button>}
-                {profileTab==='history' && pastFortunes.filter(f=>f.username===currentUser.username).map(f=><div key={f.id} className="history-item" style={{padding:'1rem', borderBottom:'1px solid #222'}}>{f.date} - {f.fortune.slice(0,100)}...</div>)}
-                {profileTab==='daily' && savedNotes.map(n=><div key={n.id} className="history-item" style={{display:'flex', justifyContent:'space-between', padding:'1rem'}}>{n.date}: {n.text} <button onClick={()=>setSavedNotes(p=>p.filter(x=>x.id!==n.id))} style={{background:'transparent', border:'none', color:'#D4AF37'}}>✕</button></div>)}
-              </div>
+              {currentUser && (
+                <>
+                  <div className="profile-header-mistik" style={{textAlign:'center', marginBottom:'2.5rem', position:'relative'}}>
+                    <div className="profile-avatar-wrapper">
+                        <div className={`profile-avatar-container ${getRankFrameClass(currentUser.rank)}`} onClick={() => avatarInputRef.current?.click()}>
+                          {currentUser.avatar_url ? (
+                            <img src={currentUser.avatar_url} alt="Avatar" className="profile-avatar-img" />
+                          ) : (
+                            <div className="avatar-placeholder">
+                              <span className="placeholder-icon">{currentUser.username[0].toUpperCase()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <input type="file" ref={avatarInputRef} onChange={handleAvatarSelect} style={{display:'none'}} accept="image/*" />
+                        <button className="avatar-upload-btn" onClick={() => avatarInputRef.current?.click()}>Fotoğrafı Değiştir</button>
+                    </div>
+                    <h2 className="title-font" style={{fontSize:'1.8rem', color:'#D4AF37', marginBottom:'0.2rem'}}>{currentUser.username}</h2>
+                    <p style={{color:'rgba(255,255,255,0.4)', fontSize:'0.85rem', letterSpacing:'1px'}}>{currentUser.rank || 'Yeni Yolcu'}</p>
+                    <div style={{display:'flex', justifyContent:'center', gap:'1.5rem', marginTop:'1rem'}}>
+                        <div style={{textAlign:'center'}}><div style={{color:'#D4AF37', fontWeight:700}}>{currentUser.credits}</div><div style={{fontSize:'0.65rem', opacity:0.5}}>CP</div></div>
+                        <div style={{textAlign:'center'}}><div style={{color:'#D4AF37', fontWeight:700}}>{currentUser.tier.toUpperCase()}</div><div style={{fontSize:'0.65rem', opacity:0.5}}>ÜYELİK</div></div>
+                    </div>
+                  </div>
+
+                  <div className="profile-tabs" style={{display:'flex', borderBottom:'1px solid rgba(212,175,55,0.2)', marginBottom:'1.5rem'}}>
+                    {(['info','history','daily'] as const).map(tab => (
+                      <button key={tab} className={profileTab===tab?'active':''} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'1rem', background:'transparent', border:'none', color:profileTab===tab?'#D4AF37':'#888', fontWeight:profileTab===tab?700:400, transition:'0.3s'}}>
+                        {tab === 'info' ? 'AYARLAR' : tab === 'history' ? 'GEÇMİŞ' : 'GÜNLÜK'}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="tab-content" style={{maxHeight:'400px', overflowY:'auto'}}>
+                    {profileTab==='info' && <button className="btn-upload" style={{width:'100%', background:'#ff4d4d'}} onClick={handleLogout}>{t.logout}</button>}
+                    {profileTab==='history' && pastFortunes.filter(f=>f.username===currentUser.username).map(f=><div key={f.id} className="history-item" style={{padding:'1rem', borderBottom:'1px solid #222'}}>{f.date} - {f.fortune.slice(0,100)}...</div>)}
+                    {profileTab==='daily' && savedNotes.map(n=><div key={n.id} className="history-item" style={{display:'flex', justifyContent:'space-between', padding:'1rem'}}>{n.date}: {n.text} <button onClick={()=>setSavedNotes(p=>p.filter(x=>x.id!==n.id))} style={{background:'transparent', border:'none', color:'#D4AF37'}}>✕</button></div>)}
+                  </div>
+                </>
+              )}
            </div>
         </div>
       )}
@@ -584,17 +686,142 @@ function App() {
       {showGiftModal && (
         <div className="modal-overlay" onClick={()=>setShowGiftModal(false)}>
            <div className="fancy-modal gift-center-modal" onClick={e=>e.stopPropagation()}>
-              <button className="modal-close-btn" onClick={()=>setShowGiftModal(false)}>✕</button>
-              <div className="gift-header"><h2 className="title-font">{t.giftCenterTitle}</h2><div className="gift-tabs"><button className={giftTab==='wheel'?'active':''} onClick={()=>setGiftTab('wheel')}>🎡 {t.wheelTitle}</button><button className={giftTab==='cups'?'active':''} onClick={()=>setGiftTab('cups')}>✨ {t.cupTitle}</button></div></div>
+              <div className="gift-header" style={{textAlign:'center', marginBottom:'2rem'}}>
+                <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2rem'}}>{t.giftCenterTitle}</h2>
+                <div className="gift-tabs" style={{display:'flex', gap:'1rem', justifyContent:'center', marginTop:'1rem'}}>
+                  <button className={giftTab==='wheel'?'active':''} onClick={()=>setGiftTab('wheel')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='wheel'?'#D4AF37':'#222', border:'none', color:giftTab==='wheel'?'#111':'#fff', cursor:'pointer'}}>🎡 {t.wheelTitle}</button>
+                  <button className={giftTab==='cups'?'active':''} onClick={()=>{
+                    setGiftTab('cups');
+                    if(cupStarIndex===-1) setCupStarIndex(Math.floor(Math.random()*6));
+                  }} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='cups'?'#D4AF37':'#222', border:'none', color:giftTab==='cups'?'#111':'#fff', cursor:'pointer'}}>✨ {t.cupTitle}</button>
+                  <button className={giftTab==='destiny'?'active':''} onClick={()=>setGiftTab('destiny')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='destiny'?'#D4AF37':'#222', border:'none', color:giftTab==='destiny'?'#111':'#fff', cursor:'pointer'}}>🗺️ {t.destinyTitle || 'Kader Yolu'}</button>
+                </div>
+              </div>
+
               <div className="gift-content">
-                {giftTab==='wheel' ? (
-                  <div className="wheel-section">
-                    <div className="wheel-container"><div className="wheel-pointer"></div><div className="wheel" style={{transform:`rotate(${wheelRotation}deg)`}}>{[1,2,3,4,5,6,7,8].map(i=>(<div key={i} className="wheel-segment" style={{transform:`rotate(${(i-1)*45}deg)`}}><span>{['5 CP','❌','10 CP','❌','15 CP','❌','ELITE','❌'][i-1]}</span></div>))}</div></div>
-                    <div className="gift-controls">{giftMessage && <div className="gift-stat-msg" style={{margin:'1rem 0'}}>{giftMessage}</div>}<button className="btn-upload" onClick={handleSpin} disabled={isSpinning}>{isSpinning?'...':t.spinBtn}</button></div>
+                {giftTab === 'wheel' && currentUser && (
+                  <div className="wheel-section" style={{position:'relative'}}>
+                     {cooldowns.wheel > 0 && currentUser.pass !== '010409' && (
+                       <div className="cooldown-overlay-gold">
+                         <div className="timer-box">
+                           <span className="timer-label">SONRAKİ ÇEVİRME</span>
+                           <div className="countdown-display">{formatCooldown(cooldowns.wheel)}</div>
+                         </div>
+                       </div>
+                     )}
+                     <div className="wheel-container">
+                        <div className="wheel-pointer"></div>
+                        <div className="wheel" style={{ transform: `rotate(${wheelRotation}deg)`, transition: isSpinning ? 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)' : 'none' }}>
+                           {[...Array(10)].map((_, i) => (
+                             <div key={i} className="wheel-segment" style={{ transform: `rotate(${i * 36}deg)` }}>
+                               <span>{['%10 🎟️', '%10 🎟️', '%20 🎫', '%20 🎫', '1 Fal 🍵', '1 Fal 🍵', 'Aşk ❤️', 'Para 💰', 'Tara 🔍', 'PREM 💎'][i]}</span>
+                             </div>
+                           ))}
+                        </div>
+                     </div>
+                     <div className="gift-controls">
+                        {giftMessage && <div className="gift-stat-msg" style={{margin:'1rem 0', color:'#D4AF37', fontWeight:700}}>{giftMessage}</div>}
+                        <button className="btn-upload" onClick={handleSpin} disabled={isSpinning || (cooldowns.wheel > 0 && currentUser.pass !== '010409')} style={{margin:0, width:'200px'}}>
+                          {isSpinning ? 'DÖNÜYOR...' : 'ÇEVİR'}
+                        </button>
+                     </div>
                   </div>
-                ) : (
-                  <div className="cups-section"><p className="gift-hint">{t.cupHint}</p><div className="cups-grid">{cupsFlipped.map((f,i)=>(<div key={i} className={`gift-card ${f?'flipped':''}`} onClick={()=>handleCupSelection(i)}><div className="card-inner"><div className="card-front">?</div><div className="card-back">⭐</div></div></div>))}</div>{giftMessage && <div className="gift-stat-msg" style={{marginTop:'1.5rem'}}>{giftMessage}</div>}</div>
                 )}
+
+                {giftTab === 'cups' && currentUser && (
+                  <div className="cups-section" style={{position:'relative'}}>
+                    {cooldowns.cups > 0 && currentUser.pass !== '010409' && (
+                       <div className="cooldown-overlay-gold">
+                         <div className="timer-box">
+                           <span className="timer-label">FINCANLAR DOLUYOR</span>
+                           <div className="countdown-display">{formatCooldown(cooldowns.cups)}</div>
+                         </div>
+                       </div>
+                    )}
+                    <p className="gift-hint">{t.cupHint}</p>
+                    <div className="cups-grid">
+                      {cupsFlipped.map((f, i) => (
+                        <div key={i} className={`gift-card ${f ? 'flipped' : ''}`} onClick={() => handleCupSelection(i)}>
+                          <div className="card-inner">
+                            <div className="card-front">☕</div>
+                            <div className="card-back">{i === cupStarIndex ? '🌟' : '❌'}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {giftMessage && <div className="gift-stat-msg" style={{marginTop:'1.5rem', color:'#D4AF37', fontWeight:700}}>{giftMessage}</div>}
+                  </div>
+                )}
+
+                {giftTab === 'destiny' && currentUser && (
+                  <div className="destiny-section" style={{textAlign:'center'}}>
+                     <div className="destiny-map-container" style={{position:'relative', marginBottom:'1.5rem'}}>
+                        {cooldowns.destiny > 0 && currentUser.pass !== '010409' && (
+                          <div className="destiny-lock-overlay" style={{position:'absolute', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:10, borderRadius:'20px', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                             <div className="timer-box" style={{borderStyle:'dashed', opacity:0.9}}>
+                                <span className="timer-label">YILDIZLARIN DİZİLMESİ BEKLENİYOR</span>
+                                <div className="countdown-display">{formatCooldown(cooldowns.destiny)}</div>
+                             </div>
+                          </div>
+                        )}
+                        <div className="destiny-map">
+                           <svg className="destiny-path-svg">
+                              <path d="M 40 210 Q 150 110 250 210 T 450 210 T 650 210 T 850 210 T 1050 210 T 1250 210 T 1450 210" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="3" strokeDasharray="10 5" />
+                           </svg>
+                           <div className="destiny-nodes">
+                              {[...Array(30)].map((_, i) => {
+                                const day = i + 1;
+                                const isCompleted = (currentUser.dailyRewardStreak || 0) >= day;
+                                const isActive = (currentUser.dailyRewardStreak || 0) + 1 === day && cooldowns.destiny === 0;
+                                return (
+                                  <div key={i} className={`destiny-node ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+                                     <div className="node-circle">
+                                       {isCompleted ? '✓' : day}
+                                     </div>
+                                     <div className="node-reward">+{getDestinyReward(day).amount} CP</div>
+                                  </div>
+                                );
+                              })}
+                           </div>
+                        </div>
+                     </div>
+
+                     <div style={{position:'relative'}}>
+                        {claimingDay && (
+                          <div className="claiming-particles">
+                             {[...Array(12)].map((_, i) => (
+                               <div key={i} className="particle" style={{ '--x': `${Math.random()*200-100}px`, '--y': `${Math.random()*200-100}px` } as any}></div>
+                             ))}
+                          </div>
+                        )}
+                        <button 
+                          className="destiny-claim-btn" 
+                          onClick={handleClaimDestinyReward} 
+                          disabled={cooldowns.destiny > 0 || !!claimingDay}
+                        >
+                          {claimingDay ? 'MÜHÜRLENİYOR...' : cooldowns.destiny > 0 ? 'YARIN GEL 🌙' : 'GÜNÜ MÜHÜRLE ✨'}
+                        </button>
+                     </div>
+                  </div>
+                )}
+              </div>
+           </div>
+        </div>
+      )}
+      {showAvatarModal && (
+        <div className="modal-overlay" onClick={() => setShowAvatarModal(false)} style={{zIndex: 2000000}}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'400px'}}>
+              <button className="modal-close-btn" onClick={() => setShowAvatarModal(false)}>✕</button>
+              <div className="avatar-preview-content">
+                 <h2 className="title-font" style={{color:'#D4AF37', marginBottom:'1.5rem'}}>Fotoğrafı Onayla</h2>
+                 <div className="preview-avatar-circle">
+                    {avatarPreview && <img src={avatarPreview} alt="Preview" />}
+                 </div>
+                 <p style={{color:'rgba(255,255,255,0.6)', marginBottom:'2rem', fontSize:'0.9rem'}}>Bu sizin mistik kimliğiniz olacak. Onaylıyor musunuz?</p>
+                 <div style={{display:'flex', gap:'1rem'}}>
+                    <button className="btn-upload" style={{flex:1, margin:0, background:'transparent', border:'1px solid rgba(255,255,255,0.2)'}} onClick={() => setShowAvatarModal(false)}>VAZGEÇ</button>
+                    <button className="btn-upload" style={{flex:1, margin:0}} onClick={handleAvatarConfirm}>ONAYLA</button>
+                 </div>
               </div>
            </div>
         </div>
