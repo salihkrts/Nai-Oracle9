@@ -76,6 +76,9 @@ function App() {
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [mood, setMood] = useState<Mood>(null);
   const [geminiStatus, setGeminiStatus] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [giftTab, setGiftTab] = useState<'wheel' | 'cups' | 'destiny'>('wheel');
