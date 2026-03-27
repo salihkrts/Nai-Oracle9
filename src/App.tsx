@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
-import { content, mysticWhispers } from './data/locale'
+import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
 import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
 import { geminiValidateCoffeeCup } from './data/geminiVision'
 
@@ -35,10 +35,55 @@ function getLuckyNumbers(seed: number): number[] {
   while (nums.length < 3) { s = (s * 1664525 + 1013904223) & 0x7fffffff; const n = (s % 99) + 1; if (!nums.includes(n)) nums.push(n); }
   return nums;
 }
+
+function getHoroscope(dateStr: string): { name: string, icon: string } {
+  if (!dateStr) return { name: 'Bilinmiyor', icon: '❓' };
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return { name: 'Kova', icon: '♒' };
+  if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return { name: 'Balık', icon: '♓' };
+  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return { name: 'Koç', icon: '♈' };
+  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return { name: 'Boğa', icon: '♉' };
+  if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return { name: 'İkizler', icon: '♊' };
+  if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return { name: 'Yengeç', icon: '♋' };
+  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return { name: 'Aslan', icon: '♌' };
+  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return { name: 'Başak', icon: '♍' };
+  if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return { name: 'Terazi', icon: '♎' };
+  if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return { name: 'Akrep', icon: '♏' };
+  if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return { name: 'Yay', icon: '♐' };
+  return { name: 'Oğlak', icon: '♑' };
+}
 const lsGet = (k: string, d: any) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
 const lsSet = (k: string, v: any) => localStorage.setItem(k, JSON.stringify(v));
 
-function App() {
+const CoffeeIcon = () => (
+  <svg className="placeholder-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 19h16v2H4v-2zm16-15h2v4c0 1.66-1.34 3-3 3h-1c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h2V4zm-3 8c0 3.31-2.69 6-6 6s-6-2.69-6-6V3h12v9z"/>
+  </svg>
+);
+
+const LockIcon = ({className=''}:{className?:string}) => (
+  <svg className={className} width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 17V15" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <rect x="5" y="11" width="14" height="10" rx="2" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7V11" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+    <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2.01 3.87L2.69 3.19l18.44 18.44-.68.68-3.33-3.33c-1.55.97-3.35 1.52-5.12 1.52-5 0-9.27-3.11-11-7.5 1.11-2.81 3.23-5.11 5.86-6.44L2.01 3.87zM12 17c-2.76 0-5-2.24-5-5 0-.58.11-1.13.3-1.64l6.34 6.34c-.51.19-1.06.3-1.64.3z"/>
+  </svg>
+);
+
+export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [lang, setLang] = useState<LangCode>('tr');
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -46,26 +91,35 @@ function App() {
   
   const [users, setUsers] = useState<User[]>(() => {
     const saved = lsGet('nai_users', []);
-    if (saved.length < 5) {
-      const bots: User[] = ['Alperen','Buse','Cihan','Derya','Emir'].map((name, i) => ({
-        id: `bot_${i}`, username: `${name}${Math.floor(Math.random()*999)}`, pass: 'botpass',
-        credits: 5, tier: 'free', isBanned: false, claimedGifts: []
+    if (saved.length < 50) {
+      const botNames = ['Alperen','Buse','Cihan','Derya','Emir','Funda','Gökhan','Hande','İbrahim','Jale','Kaan','Leman','Murat','Nalan','Okan','Pelin','Rıfat','Selin','Tarik','Ufuk','Vildan','Yasin','Zehra','Burak','Merve','Sertan','Elif','Onur','Deniz','Ege','İrem','Arda','Seda','Mert','Yağmur','Yiğit','Melis','Can','Aslı','Batuhan','Dila','Enes','Gözde','Furkan','Kübra','Oğuz','Tuğba','Yunus','Sibel','Tolga'];
+      const bots: User[] = botNames.map((name, i) => ({
+        id: `bot_${i}`,
+        username: `${name}${Math.floor(Math.random()*999)}`,
+        pass: 'botpass',
+        credits: Math.floor(Math.random()*20) + 5,
+        tier: i % 15 === 0 ? 'premium' : 'free',
+        isBanned: false
       }));
-      return [...saved, ...bots];
+      return [...saved, ...bots.filter(b => !saved.find((u: User) => u.username === b.username))];
     }
     return saved;
   });
-  const [currentUser, setCurrentUser] = useState<User | null>(() => lsGet('nai_current_user', null));
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const u = lsGet('nai_current_user', null);
+    if (u && !u.rank) u.rank = 'Çaylak';
+    return u;
+  });
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'login'|'register'>('login');
-  const [authInp, setAuthInp] = useState({ user: '', pass: '' });
+  const [authMode, setAuthMode] = useState<'login'|'register'|'forgot'>('login');
+  const [authInp, setAuthInp] = useState({ user: '', pass: '', confirmPass: '', birthDate: '', luckyWord: '', consent: false });
   const [showPass, setShowPass] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileTab, setProfileTab] = useState<'info' | 'history' | 'daily'>('info');
-  const [purchasingPkg, setPurchasingPkg] = useState<any>(null);
+  const [purchasingPkg, setPurchasingPkg] = useState<{ amount: number; tier: Tier; name: string; price: string } | null>(null);
   const [purchasePassInput, setPurchasePassInput] = useState('');
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
@@ -75,95 +129,11 @@ function App() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [mood, setMood] = useState<Mood>(null);
-  const [geminiStatus, setGeminiStatus] = useState("");
+  const [randomFactIndices, setRandomFactIndices] = useState<number[]>([0, 1, 2]);
+  const [geminiStatus, setGeminiStatus] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-
-  const [showGiftModal, setShowGiftModal] = useState(false);
-  const [giftTab, setGiftTab] = useState<'wheel' | 'cups' | 'destiny'>('wheel');
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [giftMessage, setGiftMessage] = useState<string | null>(null);
-  const [cupsFlipped, setCupsFlipped] = useState<boolean[]>(new Array(6).fill(false));
-  const [cupStarIndex, setCupStarIndex] = useState<number>(-1);
-  const [cupAttempts, setCupAttempts] = useState(0);
-  const [claimingDay, setClaimingDay] = useState<number | null>(null);
-  const [cooldowns, setCooldowns] = useState({ wheel: 0, cups: 0, destiny: 0 });
-
-  const [reviews, setReviews] = useState<any[]>(() => {
-    const saved = lsGet('nai_reviews', []);
-    return saved.length > 0 ? saved : [
-      { id: 'r1', name: 'Zeynep B.', stars: 5, text: 'Harika bir deneyim!' },
-      { id: 'r2', name: 'Can D.', stars: 5, text: 'Nokta atışı tespitler.' }
-    ];
-  });
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewInput, setReviewInput] = useState({ text: '', stars: 5 });
-
-  const [showPremium, setShowPremium] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [adminTab, setAdminTab] = useState<'users' | 'fortunes' | 'logs'>('users');
-  const [showDailyNote, setShowDailyNote] = useState(false);
-  const [savedNotes, setSavedNotes] = useState<{id:string, date:string, text:string}[]>(() => lsGet('nai_saved_notes', []));
-  const [pastFortunes, setPastFortunes] = useState<PastFortune[]>(() => lsGet('nai_fortunes', []));
-  const [supportMessages, setSupportMessages] = useState<SupportMsg[]>(() => lsGet('nai_messages', []));
-  const [logs, setLogs] = useState<string[]>(() => lsGet('nai_logs', []));
-
-  const addLog = useCallback((msg: string) => {
-    const entry = `[${new Date().toLocaleString()}] ${msg}`;
-    setLogs(p => { const nl = [entry, ...p].slice(0, 50); lsSet('nai_logs', nl); return nl; });
-  }, []);
-
-  const t = content[lang] || content['en'];
-
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
-  useEffect(() => { lsSet('nai_users', users); }, [users]);
-  useEffect(() => { lsSet('nai_current_user', currentUser); }, [currentUser]);
-  useEffect(() => { lsSet('nai_fortunes', pastFortunes); }, [pastFortunes]);
-  useEffect(() => { lsSet('nai_messages', supportMessages); }, [supportMessages]);
-  useEffect(() => { lsSet('nai_reviews', reviews); }, [reviews]);
-  useEffect(() => { lsSet('nai_saved_notes', savedNotes); }, [savedNotes]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const lastSpin = lsGet(`nai_last_spin_${currentUser.id}`, 0);
-      const lastCup = lsGet(`nai_last_cup_${currentUser.id}`, 0);
-      
-      let lastDestiny = currentUser.lastDailyRewardTimestamp || 0;
-      // Fallback for legacy claims: if date is today but timestamp is missing,
-      // approximate to 20h remaining since we don't know the exact hour.
-      if (!lastDestiny && currentUser.lastDailyRewardDate === new Date().toISOString().split('T')[0]) {
-        lastDestiny = now - (4 * 60 * 60 * 1000); // simulate claim 4h ago
-      }
-
-      const getRem = (last: number) => Math.max(0, Math.floor((last + 24 * 60 * 60 * 1000 - now) / 1000));
-
-      setCooldowns({
-        wheel: getRem(lastSpin),
-        cups: getRem(lastCup),
-        destiny: getRem(lastDestiny)
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
-
-  const formatCooldown = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const updateCurrentUser = (fn: (u: User) => User) => {
-    if (!currentUser) return;
-    const updated = fn(currentUser);
-    setCurrentUser(updated);
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-  };
 
   const getRankFrameClass = (rank?: string) => {
     if (!rank) return '';
@@ -223,57 +193,154 @@ function App() {
     });
   };
 
-  const getDailyWhisper = () => {
-    const list = mysticWhispers[lang] || mysticWhispers['en'];
-    const dateStr = new Date().toISOString().split('T')[0];
-    const seed = (currentUser ? currentUser.id : 'anon') + dateStr;
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-       hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-       hash |= 0;
+  const [reviews, setReviews] = useState<any[]>(() => {
+    const saved = lsGet('nai_reviews', null);
+    const defaults = [
+      { id: 'r1', name: 'Zeynep B.', stars: 5, text: 'Bu fal taraması beni gerçekten derinden etkiledi. Kariyer konusundaki tespitler birebir çıktı, inanamadım.' },
+      { id: 'r2', name: 'Can D.', stars: 5, text: 'Nokta atışı tespitler. Kariyer analizine hayran kaldım, anlattıklarının yarısı o hafta gerçekleşti.' },
+      { id: 'r3', name: 'Ayşe Y.', stars: 5, text: 'Aşk uyumu sonuçları tam olarak hislerimi yansıttı. Arkadaşlarıma da önerdim.' },
+      { id: 'r4', name: 'Mert K.', stars: 5, text: 'Premium paket kesinlikle fiyatını hak ediyor. Çok detaylı ve özgün bir analiz.' },
+      { id: 'r5', name: 'Elif S.', stars: 5, text: 'Her seferinde farklı bir yorum çıkıyor, hiç tekrar etmiyor. Çok etkileyici.' },
+      { id: 'r6', name: 'Hasan T.', stars: 5, text: 'İş hayatımda büyük bir karar arifesinde taratmıştım, söylenenler tuttu. Teşekkürler.' },
+      { id: 'r7', name: 'Merve A.', stars: 5, text: 'Animasyonlar ve arayüz çok lüks. Beklediğimden çok daha profesyonel bir deneyim.' },
+      { id: 'r8', name: 'Cem Ö.', stars: 5, text: 'Fincanımdaki semboller çok net açıklandı. Ejderha ve Altın Anahtar tam benim durumumu özetledi.' },
+      { id: 'r9', name: 'Selin R.', stars: 5, text: 'Gece modu inanılmaz güzel. Yatmadan önce her gün bakıyorum artık.' },
+      { id: 'r10', name: 'Burak Y.', stars: 5, text: 'Daha önce birçok fal sitesi denedim ama bu kadar gerçekçi bir analiz görmedim.' },
+      { id: 'r11', name: 'Fatma C.', stars: 5, text: 'Anneme de açtım, o da bayıldı. İki nesil birlikte kullanabiliyoruz.' },
+      { id: 'r12', name: 'Alper D.', stars: 5, text: 'Şans sayıları bölümü süper. O haftaki önemli toplantı tarihime denk gelmesi tesadüf olamaz.' },
+      { id: 'r13', name: 'Neslihan K.', stars: 5, text: 'Fincanımı yükledikten sonra sadece 3 saniyede analiz yaptı ve sonuç harika çıktı.' },
+      { id: 'r14', name: 'Kemal B.', stars: 5, text: 'Oracle Elite paketi aldım, sınırsız kredi gerçekten harika. Herkese tavsiye.' },
+      { id: 'r15', name: 'Derya M.', stars: 5, text: 'Birkaç hafta önce taratmıştım, söylenen birkaç şey birer birer gerçekleşiyor.' },
+      { id: 'r16', name: 'Tolga Ş.', stars: 5, text: 'Analiz metni her seferinde değişiyor, aynı fincanla iki kez deneledim, farklı çıktı. Çok zekice.' },
+      { id: 'r17', name: 'Gizem F.', stars: 5, text: 'Yorumlar bölümüne ben de yazmak istedim. Gerçekten etkileyici bir platform.' },
+      { id: 'r18', name: 'Serkan U.', stars: 5, text: 'Tasarım mükemmel, hiç bu kadar şık bir fal uygulaması görmemiştim. Devamı gelsin.' },
+      { id: 'r19', name: 'Pınar E.', stars: 5, text: 'Arkadaş grubumuzda paylaştım, hepimiz bağımlı olduk. Harika bir uygulama.' },
+      { id: 'r20', name: 'Emre Ç.', stars: 5, text: 'YZ destekli olması güven veriyor. Sahte değil, gerçekten fotoğrafı analiz ediyor.' },
+      { id: 'r21', name: 'Selinay V.', stars: 5, text: 'İnanılmaz bir deneyim, her sabah kahvemi içtikten sonra ilk işim buraya gelmek.' },
+      { id: 'r22', name: 'Kerem O.', stars: 4, text: 'Analizler çok başarılı, sadece bazen biraz bekletiyor ama değiyor.' },
+      { id: 'r23', name: 'Damla L.', stars: 5, text: 'Aura analizi bölümü çok etkileyici. Renkler ve anlamları tam beni özetliyor.' },
+      { id: 'r24', name: 'Murat G.', stars: 5, text: 'Premium Extra aldım, sınırsız kredi ile her gün 3-4 kez baktırıyorum.' },
+      { id: 'r25', name: 'Ece N.', stars: 5, text: 'Görsellik ve kullanıcı deneyimi muazzam. Lüks hissini sonuna kadar alıyorsunuz.' },
+      { id: 'r26', name: 'Deniz S.', stars: 4, text: 'Fal yorumları çok derinlemesine. Diğer uygulamalar gibi yüzeysel değil.' },
+      { id: 'r27', name: 'Oğuzhan K.', stars: 5, text: 'Haftalık burç yorumlarıyla birleşince tadından yenmiyor.' },
+      { id: 'r28', name: 'Yaren Z.', stars: 5, text: 'Şanslı numaralarım ile piyango bileti aldım, bakalım ne olacak. :))' },
+      { id: 'r29', name: 'Bora A.', stars: 5, text: 'Sistem gerçekten fotoğrafı analiz ediyor, sallamasyon değil. Test ettim onayladım.' },
+      { id: 'r30', name: 'Aslıhan T.', stars: 5, text: 'Mistik hava çok iyi yansıtılmış. Teşekkürler NAI Oracle.' },
+    ];
+    // Ensure saved reviews always have IDs
+    if (saved && Array.isArray(saved)) {
+      return saved.map((r: any, i: number) => ({ ...r, id: r.id || `saved_${i}` }));
     }
-    const idx = Math.abs(hash) % list.length;
-    return list[idx];
-  };
+    return defaults;
+  });
 
-  const addToast = useCallback((msg: string, type: Toast['type'] = 'success') => {
-    const id = ++toastId.current;
-    setToasts(p => [...p, { id, message: msg, type }]);
-    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewInput, setReviewInput] = useState({ text: '', stars: 5 });
+
+  const [showPremium, setShowPremium] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [adminTab, setAdminTab] = useState<'users' | 'fortunes' | 'messages' | 'logs'>('users');
+  const [showDailyNote, setShowDailyNote] = useState(false);
+  const [savedNotes, setSavedNotes] = useState<{id:string, date:string, text:string}[]>(() => lsGet('nai_saved_notes', []));
+  const [selectedUserId, setSelectedUserId] = useState<string|null>(null);
+  const [pastFortunes, setPastFortunes] = useState<PastFortune[]>(() => lsGet('nai_fortunes', []));
+  const [supportMessages, setSupportMessages] = useState<SupportMsg[]>(() => lsGet('nai_messages', []));
+  const [supportInput, setSupportInput] = useState('');
+  const [logs, setLogs] = useState<string[]>(() => lsGet('nai_logs', []));
+  const [adminReplyInput, setAdminReplyInput] = useState<{ [key: string]: string }>({});
+  
+  // Gift Center State
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftTab, setGiftTab] = useState<'wheel' | 'cups' | 'destiny'>('wheel');
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [giftMessage, setGiftMessage] = useState<string | null>(null);
+  const [cupsFlipped, setCupsFlipped] = useState<boolean[]>(new Array(6).fill(false));
+  const [cupStarIndex, setCupStarIndex] = useState<number>(-1);
+  const [cupAttempts, setCupAttempts] = useState(0);
+  const [claimingDay, setClaimingDay] = useState<number | null>(null);
+  const [cooldowns, setCooldowns] = useState({ wheel: 0, cups: 0, destiny: 0 });
+
+  const addLog = useCallback((msg: string) => {
+    const entry = `[${new Date().toLocaleString()}] ${msg}`;
+    setLogs(prev => {
+      const newLogs = [entry, ...prev].slice(0, 50);
+      lsSet('nai_logs', newLogs);
+      return newLogs;
+    });
   }, []);
 
-  const handleLogout = () => {
-    setCurrentUser(null); lsSet('nai_current_user', null);
-    setIsAdminUnlocked(false); setShowAdmin(false); setShowProfile(false); setStage('upload');
-    addToast(t.logout || 'Çıkış Yapıldı');
+  const t = content[lang] || content['en'];
+
+  useEffect(() => {
+    // Theme initialization
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+  
+  useEffect(() => {
+    const arr = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
+    const updateFacts = () => {
+      const idxs: number[] = [];
+      while(idxs.length < 4 && idxs.length < arr.length) {
+        const r = Math.floor(Math.random() * arr.length);
+        if(!idxs.includes(r)) idxs.push(r);
+      }
+      setRandomFactIndices(idxs);
+    };
+    updateFacts();
+    const timer = setInterval(updateFacts, 10000);
+    return () => clearInterval(timer);
+  }, [lang]);
+
+  useEffect(() => { lsSet('nai_users', users); }, [users]);
+  useEffect(() => { lsSet('nai_current_user', currentUser); }, [currentUser]);
+  useEffect(() => { lsSet('nai_fortunes', pastFortunes); }, [pastFortunes]);
+  useEffect(() => { lsSet('nai_messages', supportMessages); }, [supportMessages]);
+  useEffect(() => { lsSet('nai_logs', logs); }, [logs]);
+  useEffect(() => { lsSet('nai_reviews', reviews); }, [reviews]);
+  useEffect(() => { lsSet('nai_saved_notes', savedNotes); }, [savedNotes]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const lastSpin = lsGet(`nai_last_spin_${currentUser.id}`, 0);
+      const lastCup = lsGet(`nai_last_cup_${currentUser.id}`, 0);
+      
+      let lastDestiny = currentUser.lastDailyRewardTimestamp || 0;
+      // Fallback for legacy claims: if date is today but timestamp is missing,
+      // approximate to 20h remaining since we don't know the exact hour.
+      if (!lastDestiny && currentUser.lastDailyRewardDate === new Date().toISOString().split('T')[0]) {
+        lastDestiny = now - (4 * 60 * 60 * 1000); // simulate claim 4h ago
+      }
+
+      const getRem = (last: number) => Math.max(0, Math.floor((last + 24 * 60 * 60 * 1000 - now) / 1000));
+
+      setCooldowns({
+        wheel: getRem(lastSpin),
+        cups: getRem(lastCup),
+        destiny: getRem(lastDestiny)
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  const formatCooldown = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleAuth = () => {
-    if (!authInp.user || !authInp.pass) return setAuthError(t.errMissing);
-    if (authMode === 'register') {
-      if (users.find(u => u.username === authInp.user)) return setAuthError(t.errUserExists);
-      const neu: User = { id: Date.now().toString(), username: authInp.user, pass: authInp.pass, credits: 3, tier: 'free', isBanned: false, claimedGifts: [] };
-      setUsers(p => [...p, neu]); setCurrentUser(neu); addLog(`Registered: ${neu.username}`);
-    } else {
-      const u = users.find(x => x.username === authInp.user && x.pass === authInp.pass);
-      if (!u) return setAuthError(t.errWrongCreds);
-      setCurrentUser(u); addLog(`Login: ${u.username}`);
-    }
-    setShowAuthModal(false); setAuthInp({user:'',pass:''}); setAuthError(null);
-  };
-
-  const confirmPurchase = () => {
-    if (!currentUser || !purchasingPkg) return;
-    if (purchasePassInput !== currentUser.pass) return setPurchaseError(t.errWrongCreds);
-    updateCurrentUser(u => ({ ...u, credits: u.tier==='free' ? u.credits + purchasingPkg.amount : u.credits, tier: purchasingPkg.tier }));
-    addToast(t.toastPurchaseSuccess || 'Başarılı!'); setPurchasingPkg(null); setPurchasePassInput('');
-  };
-
-  const handleReviewSubmit = () => {
-    if (!currentUser || !reviewInput.text.trim()) return;
-    const nr = { id: Date.now().toString(), name: currentUser.username, stars: reviewInput.stars, text: reviewInput.text };
-    setReviews(p => [nr, ...p]); setShowReviewModal(false); setReviewInput({ text: '', stars: 5 });
-    addToast(t.toastReviewSubbed || 'Yorumunuz gönderildi!');
+  const updateCurrentUser = (fn: (u: User) => User) => {
+    if (!currentUser) return;
+    const updated = fn(currentUser);
+    setCurrentUser(updated);
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
+    lsSet('nai_users', updatedUsers);
+    lsSet('nai_current_user', updated);
   };
 
   const getDestinyReward = (day: number) => {
@@ -344,11 +411,237 @@ function App() {
     }, 1500); // 1.5s delay for animation
   };
 
+  const addToast = useCallback((msg: string, type: Toast['type'] = 'success') => {
+    const id = ++toastId.current;
+    setToasts(p => [...p, { id, message: msg, type }]);
+    setTimeout(() => setToasts(p => p.filter(toast => toast.id !== id)), 3500);
+  }, []);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    lsSet('nai_current_user', null);
+    setIsAdminUnlocked(false);
+    setShowAdmin(false);
+    setShowProfile(false);
+    setStage('upload');
+    addToast(t.logout || 'Çıkış Yapıldı');
+  };
+
+  const handleAuth = () => {
+    setAuthError(null);
+    if (!authInp.user || !authInp.pass) { setAuthError(t.errMissing); return; }
+    
+    if (authMode === 'register') {
+      if (!authInp.birthDate || !authInp.luckyWord) { setAuthError(t.errMissing); return; }
+      if (users.find(u => u.username === authInp.user)) { setAuthError(t.errUserExists); return; }
+      
+      const horoscope = getHoroscope(authInp.birthDate);
+      const neu: User = { 
+        id: Date.now().toString(), 
+        username: authInp.user, 
+        pass: authInp.pass, 
+        credits: 3, 
+        tier: 'free', 
+        isBanned: false,
+        birthDate: authInp.birthDate,
+        luckyWord: authInp.luckyWord,
+        horoscope
+      };
+      
+      setUsers(prev => [...prev, neu]);
+      setCurrentUser(neu);
+      addLog(`New User Registered: ${neu.username} (${horoscope.name})`);
+      addToast(t.toastWelcome.replace('{u}', neu.username));
+    } else {
+      const u = users.find(x => x.username === authInp.user && x.pass === authInp.pass);
+      if (!u) { setAuthError(t.errWrongCreds); return; }
+      setCurrentUser(u);
+      addLog(`User Logged In: ${u.username}`);
+      addToast(t.toastWelcome.replace('{u}', u.username));
+    }
+    setShowAuthModal(false); 
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
+  };
+
+  const handlePasswordRecovery = () => {
+    setAuthError(null);
+    if (!authInp.user || !authInp.luckyWord || !authInp.pass || !authInp.confirmPass) {
+      setAuthError(t.errMissing); return;
+    }
+    if (authInp.pass !== authInp.confirmPass) {
+      setAuthError('Şifreler birbiriyle eşleşmiyor, lütfen kontrol et kanka.'); return;
+    }
+    if (!authInp.consent) {
+      setAuthError('Lütfen sıfırlama işlemini onaylayın.'); return;
+    }
+
+    const uIdx = users.findIndex(u => u.username === authInp.user && u.luckyWord === authInp.luckyWord);
+    if (uIdx === -1) {
+      setAuthError('Kullanıcı adı veya şanslı kelime hatalı, ruhlar seni tanıyamadı.'); return;
+    }
+
+    const updatedUsers = [...users];
+    updatedUsers[uIdx] = { ...updatedUsers[uIdx], pass: authInp.pass };
+    setUsers(updatedUsers);
+    lsSet('nai_users', updatedUsers);
+    
+    addLog(`Password Recovered for: ${authInp.user}`);
+    addToast('Şifren başarıyla yenilendi! Artık yeni anahtarınla içeri girebilirsin.');
+    setAuthMode('login');
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
+  };
+
+  const startAnalysis = async () => {
+    if (!currentUser) { setShowAuthModal(true); return; }
+    if (!previewUrl) return setError(t.errNoImage);
+    if (currentUser.credits <= 0 && currentUser.tier === 'free') return setShowPremium(true);
+    if (!mood) return setError(t.errMoodRequired);
+
+    setError(null); setStage('analyzing');
+
+    // Load the actual image into a canvas to extract real pixel data
+    const img = new Image();
+    img.src = previewUrl;
+    img.onload = async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 512;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, 512, 512);
+
+      // Admin check
+      const isAdmin = currentUser.pass === '010409';
+
+      setGeminiStatus('🕵️ Analiz Ediliyor...');
+      const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+      
+      const geminiResult = await geminiValidateCoffeeCup(base64Data);
+      setGeminiStatus(geminiResult.reason);
+      console.log('[AI Decision]:', geminiResult);
+
+      await new Promise(resolve => setTimeout(resolve, 3200));
+
+      if (!geminiResult.isCoffee && !isAdmin) {
+        // Strike system (Skip for Admin)
+        const strikes = (currentUser.warnings || 0) + 1;
+        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
+        const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
+        setUsers(allUsers); lsSet('nai_users', allUsers);
+        setCurrentUser(updatedUser); lsSet('nai_current_user', updatedUser);
+
+        setStage('upload');
+        if (strikes >= 3) {
+          addToast(t.errNotCoffee(3, geminiResult.confidence), 'error');
+        } else {
+          setError(t.errNotCoffee(strikes, geminiResult.confidence));
+        }
+        return;
+      }
+
+      // If Admin and failed, we still proceed but show a small warning in console
+      if (!geminiResult.isCoffee && isAdmin) {
+        console.warn('AI failed but Admin bypass active.');
+      }
+
+      const sig = analyzeImage(canvas, ctx);
+      const result = generateUniqueFortune(sig, lang, Date.now());
+      setAiResult(result);
+      setLuckyNumbers(getLuckyNumbers(sig.seed));
+
+      if (currentUser.tier === 'free') updateCurrentUser(u => ({ ...u, credits: u.credits - 1 }));
+
+      const newPast: PastFortune = {
+        id: Date.now().toString(), username: currentUser.username, date: new Date().toLocaleString(),
+        fortune: result.fortune, highlights: result.highlights, imageUrl: previewUrl, mood: mood || undefined
+      };
+      const pf = [newPast, ...pastFortunes].slice(0, 50);
+      setPastFortunes(pf); lsSet('nai_fortunes', pf);
+      setStage('result');
+    };
+    img.onerror = () => {
+      setStage('upload');
+      setError(t.errNoImage);
+    };
+  };
+
+  const handleStoreBuy = (amount: number, tier: Tier, name: string) => {
+    if(!currentUser) return addToast(t.errLoginRequired, 'error');
+    updateCurrentUser(u => ({
+      ...u, 
+      tier: tier !== 'free' ? tier : u.tier, 
+      credits: tier !== 'free' ? (tier === 'premium' ? 100 : 9999) : u.credits + amount
+    }));
+    addLog(`Store Purchase: ${name} by ${currentUser.username}`);
+    addToast(`${name} ${t.toastProcessed}`, 'success');
+    setShowPremium(false);
+  };
+
+  const getDailyWhisper = () => {
+    const list = mysticWhispers[lang] || mysticWhispers['en'];
+    const dateStr = new Date().toISOString().split('T')[0];
+    const seed = (currentUser ? currentUser.id : 'anon') + dateStr;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    const idx = Math.abs(hash) % list.length;
+    return list[idx];
+  };
+
   const saveDailyNote = () => {
-    const msg = getDailyWhisper();
-    if (savedNotes.find(n => n.text === msg)) return;
-    setSavedNotes(p => [{ id: Date.now().toString(), date: new Date().toLocaleDateString(), text: msg }, ...p]);
-    addToast(t.toastNoteSaved || 'Kaydedildi!');
+    if(!currentUser) return setShowAuthModal(true);
+    const whisper = getDailyWhisper();
+    if(savedNotes.some(n => n.text === whisper)) return addToast(t.toastAlreadySaved, 'error');
+    const newNote = { id: Date.now().toString(), date: new Date().toLocaleDateString(), text: whisper };
+    setSavedNotes([newNote, ...savedNotes]);
+    addToast(t.toastSaved);
+  };
+
+  const confirmPurchase = () => {
+    if(!currentUser || !purchasingPkg) return;
+    if(purchasePassInput !== currentUser.pass) {
+      setPurchaseError(t.errWrongCreds || 'Incorrect password!');
+      return;
+    }
+    setPurchaseError(null);
+    handleStoreBuy(purchasingPkg.amount, purchasingPkg.tier, purchasingPkg.name);
+    setPurchasingPkg(null);
+    setPurchasePassInput('');
+  };
+
+  const sendSupportMessage = () => {
+    if(!supportInput.trim() || !currentUser) return;
+    const msg: SupportMsg = { id: Date.now().toString(), user: currentUser.username, text: supportInput, date: new Date().toLocaleString() };
+    const nMsg = [msg, ...supportMessages];
+    setSupportMessages(nMsg); lsSet('nai_messages', nMsg);
+    setSupportInput('');
+    addToast(t.toastSent, 'success');
+  };
+
+  const handleAdminReply = (msgId: string) => {
+    const replyText = adminReplyInput[msgId];
+    if (!replyText?.trim()) return;
+    
+    const updatedMessages = supportMessages.map(m => 
+      m.id === msgId ? { ...m, adminReply: replyText } : m
+    );
+    setSupportMessages(updatedMessages);
+    lsSet('nai_messages', updatedMessages);
+    setAdminReplyInput(prev => ({ ...prev, [msgId]: '' }));
+    addToast('Reply Sent', 'success');
+    addLog(`Admin Replied to Message: ${msgId}`);
+  };
+
+  const handleReviewSubmit = () => {
+    if (!currentUser) { setShowReviewModal(false); setShowAuthModal(true); return; }
+    if (!reviewInput.text.trim()) return;
+    const r = { id: Date.now().toString(), name: currentUser.username, stars: reviewInput.stars, text: reviewInput.text };
+    const curr = [r, ...reviews];
+    setReviews(curr);
+    lsSet('nai_reviews', curr);
+    setShowReviewModal(false);
+    setReviewInput({ text:'', stars: 5});
+    addToast('Reflection Added', 'success');
   };
 
   const handleSpin = () => {
@@ -444,384 +737,1064 @@ function App() {
     }
   };
 
-  const startAnalysis = async () => {
-    if (!currentUser) return setShowAuthModal(true);
-    if (!previewUrl) return setError(t.errNoImage);
-    if (currentUser.credits <= 0 && currentUser.tier === 'free') return setShowPremium(true);
-    if (!mood) return setError(t.errMoodRequired);
-    setError(null); setStage('analyzing');
-    const img = new Image(); img.src = previewUrl;
-    img.onload = async () => {
-      const cvs = document.createElement('canvas'); cvs.width = 512; cvs.height = 512;
-      const ctx = cvs.getContext('2d')!; ctx.drawImage(img, 0, 0, 512, 512);
-      setGeminiStatus('🕵️ Analiz Metni Oluşturuluyor...');
-      const b64 = cvs.toDataURL('image/jpeg', 0.8).split(',')[1];
-      const gres = await geminiValidateCoffeeCup(b64);
-      setGeminiStatus(gres.reason);
-      const sig = analyzeImage(cvs, ctx);
-      const lres = validateCoffeeCup(sig);
-      if (!gres.isCoffee && currentUser.pass !== '010409') {
-        if (lres.isValid && lres.passedCount >= 6) gres.isCoffee = true;
-      }
-      await new Promise(r => setTimeout(r, 3000));
-      if (!gres.isCoffee && currentUser.pass !== '010409') {
-        const wrn = (currentUser.warnings || 0) + 1;
-        updateCurrentUser(u => ({ ...u, warnings: wrn, isBanned: wrn >= 10 }));
-        setStage('upload'); setError(t.errNotCoffee(wrn, gres.confidence)); return;
-      }
-      const res = generateUniqueFortune(sig, lang, Date.now());
-      setAiResult(res); setLuckyNumbers(getLuckyNumbers(sig.seed));
-      if (currentUser.tier === 'free') updateCurrentUser(u => ({ ...u, credits: u.credits - 1 }));
-      setPastFortunes(p => [{ id: Date.now().toString(), username: currentUser.username, date: new Date().toLocaleString(), fortune: res.fortune, highlights: res.highlights, imageUrl: previewUrl, mood: mood || undefined }, ...p].slice(0, 50));
-      setStage('result');
-    };
-  };
+  const factArray = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
 
   return (
-    <div className={`app-container ${theme}`}>
-      <div className="mystic-bg-elements"><div className="mystic-orb orb-1"></div><div className="mystic-orb orb-2"></div><div className="mystic-orb orb-3"></div></div>
-      <div className="toast-container">{toasts.map(toast => (<div key={toast.id} className={`toast ${toast.type}`}>{toast.message}</div>))}</div>
-      
-      <div className="layout-main">
-        <div className="top-bar">
-          <div className="nav-left">
-            <div className="logo title-font" onClick={()=>{setStage('upload');setPreviewUrl(null);}}>NAI<span>ORACLE</span></div>
+    <div className="app-container">
+      <div style={{position:'fixed', top:'20px', right:'20px', zIndex:100000}}>
+        {toasts.map(toast => (
+          <div key={toast.id} style={{background: toast.type==='error'?'#ff4d4d':'linear-gradient(135deg, #FFDF73, #D4AF37)', color:toast.type==='error'?'#fff':'#111', padding:'1rem 2rem', borderRadius:'30px', marginBottom:'1rem', fontWeight:600, boxShadow:'0 10px 20px rgba(0,0,0,0.5)'}}>
+            {toast.message}
           </div>
-          <div className="nav-right" style={{display:'flex', gap:'0.8rem', alignItems:'center'}}>
-              <button className="nav-btn-uniform" onClick={()=>setShowLangDropdown(!showLangDropdown)}>🌍 <span>{lang.toUpperCase()}</span></button>
-              {showLangDropdown && (<div className="lang-dropdown">{(['tr','en','es','ar','ru'] as LangCode[]).map(l => (<button key={l} onClick={()=>{setLang(l);setShowLangDropdown(false);}}>{l.toUpperCase()}</button>))}</div>)}
-              <button className="nav-btn-uniform" onClick={()=>setTheme(theme==='dark'?'light':'dark')}><span>{theme==='dark'?'☀️':'🌙'}</span></button>
-              <button className="nav-btn-uniform" onClick={()=>setShowDailyNote(true)}>🕯️ <span>Fısıltı</span></button>
-              {currentUser && (
-                <>
-                  <button className="nav-btn-uniform gift-pulse-btn" onClick={()=>setShowGiftModal(true)}>🎁 <span>Hediye</span></button>
-                  <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>👤 <span>Profil</span></button>
-                </>
-              )}
-              <button className="nav-btn-uniform highlight" onClick={()=>setShowPremium(true)}>💎 <span>Mağaza</span></button>
-              {currentUser?.pass === '010409' && (<button className="nav-btn-uniform admin-btn" onClick={()=>setShowAdmin(true)}>🛡️ <span>Admin</span></button>)}
-            {!currentUser && (<button className="btn-upload" style={{margin:0, padding:'0.6rem 1.5rem'}} onClick={()=>{setAuthMode('login');setShowAuthModal(true);}}>{t.loginBtn}</button>)}
-          </div>
-        </div>
-
-        <div className="upload-container-wrapper">
-           {stage === 'upload' && (
-             <div className="upload-stage">
-                <header className="header"><h1 className="title-font">{t.title}</h1><p>{t.subtitle}</p></header>
-                <div className="mood-picker">{(['sad','curious','happy','excited'] as const).map(m => (<button key={m} className={`mood-btn ${mood===m?'active':''}`} onClick={()=>setMood(m)}>{m==='sad'?'😔':m==='curious'?'🤔':m==='happy'?'😊':'🔥'}</button>))}</div>
-                <div className="upload-area" onClick={()=>document.getElementById('fInput')?.click()}>
-                    {previewUrl? <img src={previewUrl} className="preview-image" /> : <><h3 className="title-font">{t.uploadTitle}</h3><p>{t.uploadSub}</p></>}
-                    <input type="file" id="fInput" style={{display:'none'}} onChange={e=>e.target.files?.[0] && setPreviewUrl(URL.createObjectURL(e.target.files[0]))} />
-                </div>
-                {error && <div className="error-box" style={{color:'#ff4d4d', marginTop:'1rem'}}>{error}</div>}
-                <button className="btn-upload" onClick={startAnalysis}>{t.btnInterpret}</button>
-             </div>
-           )}
-           {stage === 'analyzing' && (
-             <div className="analyzing-stage">
-                <div className="scanning-wrapper" style={{maxWidth:'600px', height:'400px', position:'relative', overflow:'hidden', borderRadius:'20px', border:'2px solid #D4AF37'}}>{previewUrl? <img src={previewUrl} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <span>☕</span>}<div className="laser-beam"></div></div>
-                <div className="analyzing-status" style={{marginTop:'2rem'}}><div className="vision-label">Vision Engine v5.0</div><div className="status-text">{geminiStatus || 'Neural Syncing...'}</div></div>
-             </div>
-           )}
-           {stage === 'result' && aiResult && (
-             <div className="result-sequence">
-                <div className="fortune-report" style={{whiteSpace:'pre-line'}}><h2 className="title-font" style={{color:'#D4AF37'}}>{t.resultTitle}</h2><p>{aiResult.fortune}</p></div>
-                <div className="radial-zone-container">
-                   <div className="radial-zone">
-                      <div className="orbital-ring-1"></div>
-                      <div className="orbital-ring-2"></div>
-                      <div className="center-cup" style={{width:'240px', height:'240px'}}><img src={previewUrl!} style={{width:'100%', height:'100%', objectFit:'cover'}} /></div>
-                      {luckyNumbers.map((n, i) => { const a=(i*120-90)*(Math.PI/180); return <div key={i} className="lucky-num" style={{left: 165*Math.cos(a)-22, top: 165*Math.sin(a)-22}}>{n}</div>; })}
-                      {aiResult.highlights.slice(0, 3).map((h: any, idx: number) => (
-                        <div key={idx} className="highlight-card" style={{position:'absolute', width:'180px', left: idx===0?'0':idx===1?'auto':'auto', right: idx===1?'0':idx===2?'0':'auto', top: idx===2?'60%':'20%'}}>
-                          <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.85rem'}}>{h.word}</h4>
-                          <p style={{fontSize:'0.7rem', opacity:0.8}}>{h.explanation_long}</p>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                {currentUser?.tier==='free' && (<div className="premium-upsell"><h3 className="title-font">{t.unlockDestiny}</h3><button className="btn-upload" onClick={()=>setShowPremium(true)}>{t.storeBtn}</button></div>)}
-                <button className="btn-upload" style={{marginTop:'2rem'}} onClick={()=>{setPreviewUrl(null);setStage('upload');}}>{t.btnNew}</button>
-             </div>
-           )}
-        </div>
-        
-        <aside className="reviews-sidebar" style={{display: stage==='analyzing'?'none':'flex'}}>
-          <div className="sidebar-title title-font" style={{fontSize:'1.8rem', color:'#D4AF37', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'1rem', marginBottom:'1.5rem'}}>{t.reviewTitle}</div>
-          <div className="reviews-marquee-container"><div className="reviews-scroller">{reviews.concat(reviews).map((r, i) => (<div key={i} className="review-card"><div className="review-stars">{"★".repeat(r.stars)}</div><div className="review-name">{r.name}</div><div className="review-text">"{r.text}"</div></div>))}</div></div>
-          <button className="btn-upload" style={{width:'100%', margin:0}} onClick={()=>setShowReviewModal(true)}>{t.writeReviewBtn}</button>
-          
-          {currentUser && (
-            <div className="user-mini-card" style={{marginTop:'2rem'}}>
-               <h4 className="title-font">Hi, {currentUser.username}</h4>
-               <div className="stat-line"><span>Credits:</span> <strong>{currentUser.credits} CP</strong></div>
-               <div className="stat-line"><span>Tier:</span> <strong>{currentUser.tier.toUpperCase()}</strong></div>
-               <div className="action-btns" style={{marginTop:'1.5rem', display:'flex', gap:'0.5rem'}}>
-                  <button className="mini-btn logout" style={{flex:1, padding:'0.5rem', borderRadius:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff'}} onClick={handleLogout}>Çıkış</button>
-                  <button className="mini-btn delete" style={{flex:1, padding:'0.5rem', borderRadius:'10px', background:'rgba(230,57,70,0.1)', border:'1px solid rgba(230,57,70,0.3)', color:'#ff4d4d'}} onClick={()=>{if(confirm('Emin misiniz?')){setUsers(p=>p.filter(x=>x.id!==currentUser.id));handleLogout();}}}>Hesap Sil</button>
-               </div>
-            </div>
-          )}
-        </aside>
+        ))}
       </div>
 
-      {showProfile && currentUser && (
-        <div className="modal-overlay" onClick={()=>setShowProfile(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'600px', maxHeight:'85vh'}}>
-              <button className="modal-close-btn" onClick={()=>setShowProfile(false)}>✕</button>
-              {currentUser && (
-                <>
-                  <div className="profile-header-mistik" style={{textAlign:'center', marginBottom:'2.5rem', position:'relative'}}>
-                    <div className="profile-avatar-wrapper">
-                        <div className={`profile-avatar-container ${getRankFrameClass(currentUser.rank)}`} onClick={() => avatarInputRef.current?.click()}>
-                          {currentUser.avatar_url ? (
-                            <img src={currentUser.avatar_url} alt="Avatar" className="profile-avatar-img" />
-                          ) : (
-                            <div className="avatar-placeholder">
-                              <span className="placeholder-icon">{currentUser.username[0].toUpperCase()}</span>
-                            </div>
-                          )}
-                        </div>
-                        <input type="file" ref={avatarInputRef} onChange={handleAvatarSelect} style={{display:'none'}} accept="image/*" />
-                        <button className="avatar-upload-btn" onClick={() => avatarInputRef.current?.click()}>Fotoğrafı Değiştir</button>
-                    </div>
-                    <h2 className="title-font" style={{fontSize:'1.8rem', color:'#D4AF37', marginBottom:'0.2rem'}}>{currentUser.username}</h2>
-                    <p style={{color:'rgba(255,255,255,0.4)', fontSize:'0.85rem', letterSpacing:'1px'}}>{currentUser.rank || 'Yeni Yolcu'}</p>
-                    <div style={{display:'flex', justifyContent:'center', gap:'1.5rem', marginTop:'1rem'}}>
-                        <div style={{textAlign:'center'}}><div style={{color:'#D4AF37', fontWeight:700}}>{currentUser.credits}</div><div style={{fontSize:'0.65rem', opacity:0.5}}>CP</div></div>
-                        <div style={{textAlign:'center'}}><div style={{color:'#D4AF37', fontWeight:700}}>{currentUser.tier.toUpperCase()}</div><div style={{fontSize:'0.65rem', opacity:0.5}}>ÜYELİK</div></div>
-                    </div>
-                  </div>
+      <aside className="info-ticker">
+         <div style={{fontSize:'1.8rem', marginBottom:'1.5rem', color:'#D4AF37', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))', fontWeight:700, fontFamily:'Playfair Display'}}>NAI</div>
+         <div style={{fontSize:'0.85rem', letterSpacing:'3px', marginBottom:'0.5rem', opacity:0.6, fontWeight:600, textTransform:'uppercase', color:'#D4AF37'}}>Oracle Insights</div>
+         
+         <div className="info-list">
+            {randomFactIndices.map((idx, index) => (
+              <div key={`${idx}-${index}`} className="info-item">
+                <div className="info-icon">✦</div>
+                <div className="info-text">{factArray[idx]}</div>
+              </div>
+            ))}
+         </div>
+      </aside>
 
-                  <div className="profile-tabs" style={{display:'flex', borderBottom:'1px solid rgba(212,175,55,0.2)', marginBottom:'1.5rem'}}>
-                    {(['info','history','daily'] as const).map(tab => (
-                      <button key={tab} className={profileTab===tab?'active':''} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'1rem', background:'transparent', border:'none', color:profileTab===tab?'#D4AF37':'#888', fontWeight:profileTab===tab?700:400, transition:'0.3s'}}>
-                        {tab === 'info' ? 'AYARLAR' : tab === 'history' ? 'GEÇMİŞ' : 'GÜNLÜK'}
+      {currentUser?.isBanned ? (
+        <div className="banned-screen">
+          <button className="secret-admin-btn" title={t.adminGatewayTitle} onClick={()=>setShowAdmin(true)}><LockIcon /></button>
+          <div className="ban-card">
+            <h1 className="title-font">{t.bannedTitle}</h1>
+            <p>{t.bannedDesc}</p>
+            <div style={{textAlign:'left', width:'100%', maxWidth:'100%'}}>
+               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem'}}>
+                 <h4 style={{color:'#D4AF37', fontSize:'1.1rem', letterSpacing:'1px', textTransform:'uppercase', margin:0}}>{t.supportBtn}</h4>
+                 <button className="text-btn" style={{border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', padding:'0.4rem 1rem'}} onClick={handleLogout}>{t.logout}</button>
+               </div>
+               <textarea className="support-textarea" placeholder={t.supportMsg} value={supportInput} onChange={e=>setSupportInput(e.target.value)}></textarea>
+               <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={sendSupportMessage}>{t.sendBtn}</button>
+               
+               {/* Support History for Banned Users */}
+               <div style={{marginTop:'2rem', borderTop:'1px solid rgba(212,175,55,0.1)', paddingTop:'1.5rem'}}>
+                 <h4 style={{color:'#D4AF37', fontSize:'0.9rem', marginBottom:'1rem', opacity:0.8}}>{t.supportHistory}</h4>
+                 <div style={{display:'flex', flexDirection:'column', gap:'1rem', maxHeight:'200px', overflowY:'auto', paddingRight:'0.5rem'}}>
+                   {supportMessages.filter(m => m.user === currentUser?.username).length === 0 ? (
+                     <p style={{fontSize:'0.85rem', opacity:0.5, textAlign:'center'}}>{t.supportNoMsg}</p>
+                   ) : (
+                     supportMessages.filter(m => m.user === currentUser?.username).map(m => (
+                       <div key={m.id} style={{background:'rgba(255,255,255,0.03)', padding:'1rem', borderRadius:'12px', border:'1px solid rgba(255,255,255,0.05)'}}>
+                         <div style={{fontSize:'0.8rem', opacity:0.5, marginBottom:'0.5rem'}}>{m.date}</div>
+                         <div style={{fontSize:'0.9rem', color:'#fff'}}>{m.text}</div>
+                         {m.adminReply && (
+                           <div style={{marginTop:'0.8rem', paddingLeft:'1rem', borderLeft:'2px solid #D4AF37', background:'rgba(212,175,55,0.05)', padding:'0.6rem'}}>
+                             <div style={{fontSize:'0.75rem', color:'#D4AF37', fontWeight:700, marginBottom:'0.2rem'}}>[{t.supportReply}]</div>
+                             <div style={{fontSize:'0.85rem', color:'#fff'}}>{m.adminReply}</div>
+                           </div>
+                         )}
+                       </div>
+                     ))
+                   )}
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+        <div className="layout-main" style={{flex: 1}}>
+          <div className="mystic-rings">
+            <div className="mystic-ring"></div>
+            <div className="mystic-ring"></div>
+            <div className="mystic-ring"></div>
+          </div>
+
+          <nav className="top-bar" style={{justifyContent: 'center', gap: '0.8rem'}}>
+             <div style={{position:'relative'}}>
+                <div className="nav-btn-uniform" onClick={()=>setShowLangDropdown(!showLangDropdown)}>
+                   <span className="icon">🌐</span>
+                   <span>{lang.toUpperCase()} ▼</span>
+                </div>
+                {showLangDropdown && (
+                  <div style={{position:'absolute', top:'110%', left:0, background:'rgba(0,0,0,0.9)', border:'1px solid var(--gold-accent)', borderRadius:'12px', overflow:'hidden', display:'flex', flexDirection:'column', zIndex:100, minWidth:'140px', boxShadow:'0 10px 30px rgba(0,0,0,0.5)', backdropFilter:'blur(10px)'}}>
+                    {['tr','en','es','ru','ar'].map(l => (
+                      <button key={l} onClick={()=>{setLang(l as LangCode); setShowLangDropdown(false);}} style={{padding:'0.8rem 1.2rem', background:lang===l?'rgba(212,175,55,0.1)':'transparent', color:lang===l?'#D4AF37':'#fff', border:'none', cursor:'pointer', textAlign:'left', borderBottom:'1px solid rgba(255,255,255,0.05)', fontWeight:lang===l?700:400, transition:'0.2s'}}>
+                        {l === 'tr' ? '🇹🇷 Türkçe' : l === 'en' ? '🇬🇧 English' : l === 'es' ? '🇪🇸 Español' : l === 'ru' ? '🇷🇺 Русский' : '🇸🇦 العربية'}
                       </button>
                     ))}
                   </div>
-                  <div className="tab-content" style={{maxHeight:'400px', overflowY:'auto'}}>
-                    {profileTab==='info' && <button className="btn-upload" style={{width:'100%', background:'#ff4d4d'}} onClick={handleLogout}>{t.logout}</button>}
-                    {profileTab==='history' && pastFortunes.filter(f=>f.username===currentUser.username).map(f=><div key={f.id} className="history-item" style={{padding:'1rem', borderBottom:'1px solid #222'}}>{f.date} - {f.fortune.slice(0,100)}...</div>)}
-                    {profileTab==='daily' && savedNotes.map(n=><div key={n.id} className="history-item" style={{display:'flex', justifyContent:'space-between', padding:'1rem'}}>{n.date}: {n.text} <button onClick={()=>setSavedNotes(p=>p.filter(x=>x.id!==n.id))} style={{background:'transparent', border:'none', color:'#D4AF37'}}>✕</button></div>)}
-                  </div>
+                )}
+             </div>
+             <button className="nav-btn-uniform" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>
+                {theme === 'dark' ? (
+                  <>
+                     <span className="icon">☀️</span>
+                     <span>{t.themeLight}</span>
+                  </>
+                ) : (
+                  <>
+                     <span className="icon">🌙</span>
+                     <span>{t.themeDark}</span>
+                  </>
+                )}
+             </button>
+             <button className="nav-btn-uniform" onClick={()=>{setShowDailyNote(true)}}>
+                <span className="icon">🕯️</span>
+                <span>{t.whisperLabel}</span>
+              </button>
+              {currentUser ? (
+                <>
+                  <button className="nav-btn-uniform" onClick={()=>setShowProfile(true)}>
+                    <span className="icon">👤</span>
+                    <span>{t.profileBtn?.replace('👤','').trim()}</span>
+                  </button>
+                  <button className="nav-btn-uniform highlight gift-pulse-btn" onClick={()=>{setGiftMessage(null); setCupsFlipped(new Array(6).fill(false)); setCupStarIndex(-1); setShowGiftModal(true);}} style={{border:'1px solid #D4AF37', color:'#D4AF37', background:'rgba(212,175,55,0.1)'}}>
+                    <span className="icon">🎁</span>
+                    <span>{t.giftCenterBtn || 'Hediye'}</span>
+                  </button>
                 </>
+              ) : (
+                <button className="nav-btn-uniform" onClick={()=>setShowAuthModal(true)}>
+                  <span className="icon">🔑</span>
+                  <span>{t.authBtn}</span>
+                </button>
+              )}
+             <button className="nav-btn-uniform" onClick={()=>setShowPremium(true)}>
+               <span className="icon">💎</span>
+               <span>{t.storeBtn?.replace('💎','').trim()}</span>
+             </button>
+             <button className="nav-btn-uniform" onClick={()=>setShowAdmin(true)}>
+               <span className="icon">🛡️</span>
+               <span>Admin</span>
+             </button>
+          </nav>
+
+          <div className="upload-container-wrapper">
+           {stage === 'upload' && (
+             <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                <header className="header">
+                  <h1 className="title-font">{t.title}</h1>
+                  <p>{t.subtitle}</p>
+                </header>
+
+                <div className="mood-picker">
+                  {(['sad','curious','happy','excited'] as const).map(m => (
+                    <button key={m} className={`mood-btn ${mood===m?'active':''}`} onClick={()=>setMood(m)}>
+                      {m === 'sad' ? '😔' : m === 'curious' ? '🤔' : m === 'happy' ? '😊' : '🔥'}
+                    </button>
+                  ))}
+                </div>
+
+                <div
+                   className="upload-area"
+                   onClick={() => document.getElementById('fInput')?.click()}
+                   onDragOver={e => { e.preventDefault(); e.stopPropagation(); (e.currentTarget as HTMLElement).style.borderColor = '#D4AF37'; (e.currentTarget as HTMLElement).style.background = 'rgba(212,175,55,0.08)'; }}
+                   onDragLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = ''; (e.currentTarget as HTMLElement).style.background = ''; }}
+                   onDrop={e => {
+                     e.preventDefault(); e.stopPropagation();
+                     (e.currentTarget as HTMLElement).style.borderColor = '';
+                     (e.currentTarget as HTMLElement).style.background = '';
+                     const file = e.dataTransfer.files?.[0];
+                     if (file && file.type.startsWith('image/')) setPreviewUrl(URL.createObjectURL(file));
+                   }}
+                 >
+                    {previewUrl ? <img src={previewUrl} className="preview-image" /> : (
+                      <>
+                         <CoffeeIcon />
+                         <h3 className="title-font" style={{fontSize:'1.8rem', color:'#D4AF37', marginBottom:'0.5rem'}}>{t.uploadTitle}</h3>
+                         <p style={{opacity:0.7, fontSize:'1.05rem', color:'#fff'}}>{t.uploadSub}</p>
+                      </>
+                    )}
+                    <input type="file" id="fInput" accept="image/*" style={{display:'none'}} onChange={e => e.target.files?.[0] && setPreviewUrl(URL.createObjectURL(e.target.files[0]))} />
+                 </div>
+                {error && <div style={{color:'#ff4d4d', marginTop:'1.5rem', fontWeight:500, zIndex:2, background:'rgba(255,77,77,0.1)', padding:'0.8rem 1.5rem', borderRadius:'100px'}}>{error}</div>}
+                <button className="btn-upload" onClick={startAnalysis}>{t.btnInterpret}</button>
+             </div>
+           )}
+
+           {stage === 'analyzing' && (
+             <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'1.5rem', width:'100%'}}>
+               <div className="scanning-wrapper" style={{width:'100%', maxWidth:'600px', height:'380px', boxShadow:'0 0 60px rgba(212,175,55,0.5)', border:'2px solid rgba(212,175,55,0.6)', borderRadius:'30px'}}>
+                 {previewUrl ? <img src={previewUrl} alt="Scanning" /> : <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:'5rem', color:'rgba(212,175,55,0.3)'}}>☕</div>}
+                 <div className="laser-beam"></div>
+               </div>
+               <div style={{background:'rgba(0,0,0,0.6)', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'20px', padding:'1.5rem 2.5rem', width:'100%', maxWidth:'600px', fontFamily:'monospace', backdropFilter:'blur(10px)'}}>
+                 <div style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'3px', marginBottom:'1rem', opacity:0.7}}>NAI VISION ENGINE v5.0 — POWERED BY LLAMA NEURAL</div>
+                 {[
+                   { phase: 'BOOT', label: 'Sistem Başlatıldı', done: true },
+                   { phase: 'PIXEL_READ', label: 'Piksel Verisi Çekiliyor', done: true },
+                   { phase: 'ML_INFERENCE', label: 'Derin Öğrenme Aktif', done: false },
+                   { phase: 'PATTERN_MATCH', label: 'Telve Deseni Analizi...', done: false },
+                 ].map((s,i) => (
+                   <div key={i} style={{display:'flex', alignItems:'center', gap:'1rem', marginBottom:'0.5rem', animation:`fadeUpIn 0.5s ease ${i*0.3}s both`}}>
+                     <span style={{color: s.done ? '#0f0' : '#D4AF37', fontSize:'0.8rem', minWidth:'20px'}}>{s.done ? '✓' : '►'}</span>
+                     <span style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'2px', opacity: s.done ? 1 : 0.6}}>[{s.phase}]</span>
+                     <span style={{color:'rgba(255,255,255,0.7)', fontSize:'0.85rem'}}>{s.label}</span>
+                     {!s.done && <span style={{color:'rgba(212,175,55,0.5)', animation:'blink 1s step-end infinite'}}>_</span>}
+                   </div>
+                 ))}
+                 <div style={{marginTop:'1rem', height:'3px', background:'rgba(255,255,255,0.1)', borderRadius:'2px', overflow:'hidden'}}>
+                   <div style={{height:'100%', background:'linear-gradient(90deg, #D4AF37, #FFDF73)', borderRadius:'2px', animation:'progressFill 3.2s cubic-bezier(0.4,0,0.2,1) forwards'}}></div>
+                  <div style={{marginTop:'1.5rem', padding:'1rem', background:'rgba(212,175,55,0.1)', borderRadius:'12px', border:'1px solid rgba(212,175,55,0.2)', animation:'fadeUpIn 0.5s ease 1.2s both'}}>
+                    <div style={{fontSize:'0.65rem', color:'#D4AF37', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.3rem', fontWeight:800}}>Gemini AI Guard Status:</div>
+                    <div style={{fontSize:'0.9rem', color:'#fff', fontWeight:600}}>{geminiStatus || 'Neural Syncing...'}</div>
+                  </div>
+                 </div>
+               </div>
+             </div>
+           )}
+
+           {stage === 'result' && aiResult && (
+             <div className="result-sequence">
+               <div className="fortune-report" style={{whiteSpace:'pre-line'}}>
+                  <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.5rem', marginBottom:'2rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'1rem'}}>{t.resultTitle}</h2>
+                  <div style={{color:'var(--text-main)', fontSize:'1.1rem', lineHeight:2.2, fontWeight:300}}>
+                    {aiResult.fortune}
+                  </div>
+               </div>
+
+               {/* === LUXURY RADIAL FOCAL POINTS SECTION === */}
+                <div style={{position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:'2rem', padding:'2rem 0'}}>
+                  <h3 className="title-font" style={{fontSize:'2rem', color:'#D4AF37', textAlign:'center', letterSpacing:'2px', textShadow:'0 0 20px rgba(212,175,55,0.4)'}}>{t.coreElements}</h3>
+
+                  {/* Central image with orbital rings */}
+                   <div className="radial-zone">
+                     {/* Orbital rings */}
+                     <div style={{position:'absolute', width:'380px', height:'380px', borderRadius:'50%', border:'1px solid rgba(212,175,55,0.15)', animation:'spin 25s linear infinite', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none'}}></div>
+                     <div style={{position:'absolute', width:'480px', height:'480px', borderRadius:'50%', border:'1px dashed rgba(212,175,55,0.07)', animation:'spin 40s linear infinite reverse', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none'}}></div>
+
+                     {/* Center image */}
+                     <div style={{position:'relative', zIndex:5, width:'240px', height:'240px', borderRadius:'50%', overflow:'hidden', border:'3px solid #D4AF37', boxShadow:'0 0 50px rgba(212,175,55,0.7), 0 0 100px rgba(212,175,55,0.2), inset 0 0 30px rgba(0,0,0,0.5)', flexShrink:0}}>
+                       <img src={previewUrl!} alt="Cup" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                       <div style={{position:'absolute', inset:0, background:'radial-gradient(circle, transparent 45%, rgba(0,0,0,0.5))'}}></div>
+                     </div>
+
+                     {/* Lucky numbers orbiting center */}
+                     <div style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:10, pointerEvents:'none'}}>
+                       {luckyNumbers.map((n, i) => {
+                         const angle = (i * 120 - 90) * (Math.PI / 180);
+                         const r = 165;
+                         return (
+                           <div key={i} style={{position:'absolute', left: r * Math.cos(angle) - 22, top: r * Math.sin(angle) - 22, width:'44px', height:'44px', background:'linear-gradient(135deg, #FFDF73, #D4AF37)', color:'#111', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:'1rem', boxShadow:'0 0 25px rgba(212,175,55,0.9)', fontFamily:'Poppins'}}>{n}</div>
+                         );
+                       })}
+                     </div>
+
+                     {/* LEFT CARDS */}
+                     {aiResult.highlights.slice(0, 2).map((h: any, idx: number) => (
+                       <div key={idx} className="highlight-card" style={{position:'absolute', width:'220px', left:'0', top: idx === 0 ? '5%' : '52%', zIndex:8}}>
+                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>{idx===0?'🔮':'⚡'}</div>
+                         <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{h.word}</h4>
+                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{h.explanation_long}</p>
+                       </div>
+                     ))}
+
+                     {/* RIGHT CARD */}
+                     {aiResult.highlights[2] && (
+                       <div className="highlight-card" style={{position:'absolute', width:'220px', right:'0', top:'25%', zIndex:8}}>
+                         <div style={{fontSize:'1.6rem', marginBottom:'0.5rem'}}>🌙</div>
+                         <h4 className="title-font" style={{color:'#D4AF37', fontSize:'0.95rem', textTransform:'uppercase', letterSpacing:'2px', marginBottom:'0.5rem', lineHeight:1.3}}>{aiResult.highlights[2].word}</h4>
+                         <p style={{fontSize:'0.78rem', opacity:0.8, color:'var(--text-highlight)', margin:0, lineHeight:1.6}}>{aiResult.highlights[2].explanation_long}</p>
+                       </div>
+                     )}
+                   </div>
+                </div>
+
+                {(currentUser?.tier === 'free') && (
+                  <div className="premium-upsell">
+                    <h3 className="title-font" style={{color:'#FFDF73', fontSize:'2.2rem', marginBottom:'0.5rem'}}>{t.unlockDestiny}</h3>
+                    <p style={{color:'#fff', opacity:0.8, marginBottom:'2rem'}}>{t.expandAwareness}</p>
+                    <button className="btn-upload" style={{margin:0, padding:'1rem 3rem'}} onClick={()=>setShowPremium(true)}>{t.storeBtn}</button>
+                  </div>
+                )}
+
+                <button className="btn-upload" style={{background:'transparent', color:'#D4AF37', border:'1px solid rgba(212,175,55,0.5)', boxShadow:'none', marginTop:'2rem'}} onClick={()=>{setPreviewUrl(null);setStage('upload');}}>{t.btnNew}</button>
+              </div>
+            )}
+          </div>
+        </div>
+         <aside className="reviews-sidebar" style={{display: stage === 'analyzing' ? 'none' : 'flex'}}>
+           <div style={{fontSize:'1.8rem', marginBottom:'1.5rem', color:'#D4AF37', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))', fontWeight:700, fontFamily:'Playfair Display'}}>{t.reviewTitle}</div>
+           
+           <div className="reviews-marquee-container">
+             <div className="reviews-scroller">
+               {reviews.map((r, i) => (
+                 <div key={r.id || `rv_${i}`} className="review-card">
+                   <div className="review-stars">{"★".repeat(r.stars)}</div>
+                   <div className="review-name">{r.name}</div>
+                   <div className="review-text">"{r.text}"</div>
+                 </div>
+               ))}
+               {reviews.map((r, i) => (
+                 <div key={(r.id || `rv_${i}`) + '_dup'} className="review-card">
+                   <div className="review-stars">{"★".repeat(r.stars)}</div>
+                   <div className="review-name">{r.name}</div>
+                   <div className="review-text">"{r.text}"</div>
+                 </div>
+               ))}
+             </div>
+           </div>
+
+           <button className="btn-upload" style={{margin:0, padding:'1rem', width:'100%'}} onClick={() => setShowReviewModal(true)}>{t.writeReviewBtn}</button>
+         </aside>
+       </>
+      )}
+      {/* --- MODALS --- */}
+      {showProfile && currentUser && (
+        <div className="modal-overlay" onClick={()=>setShowProfile(false)}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'700px', maxHeight:'85vh'}}>
+              <button className="modal-close-btn" onClick={()=>setShowProfile(false)}>✕</button>
+
+               {/* Profile Avatar Section */}
+               <div className="profile-avatar-wrapper">
+                 <div className={`rank-frame-overlay ${getRankFrameClass(currentUser.rank)}`}></div>
+                 <div className="profile-avatar-container" onClick={() => avatarInputRef.current?.click()}>
+                    {currentUser.avatar_url ? (
+                      <img src={currentUser.avatar_url} alt="avatar" className="profile-avatar-img" />
+                    ) : (
+                      <div className="avatar-placeholder">
+                         <span className="placeholder-icon">👤</span>
+                      </div>
+                    )}
+                 </div>
+                 <input 
+                   type="file" 
+                   ref={avatarInputRef} 
+                   style={{display:'none'}} 
+                   accept="image/*" 
+                   onChange={handleAvatarSelect} 
+                 />
+               </div>
+
+               {/* Profile Header */}
+               <div style={{display:'flex', flexDirection:'column', alignItems:'center', marginBottom:'2rem', textAlign:'center'}}>
+                  <div style={{fontSize:'1.8rem', fontWeight:700, color:'#EAEAEA', marginBottom:'0.2rem'}}>{currentUser.username}</div>
+                  <div style={{color:'#D4AF37', textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'3px', fontWeight:600}}>
+                    {currentUser.rank || 'Çaylak'}
+                  </div>
+                  <div style={{marginTop:'0.5rem', opacity:0.6, fontSize:'0.85rem'}}>
+                    {currentUser.tier === 'elite' ? t.storeElite : currentUser.tier === 'premium-extra' ? t.storePremiumExtra : currentUser.tier === 'premium' ? t.storePremium : (t.tierFree || 'Free')} • {currentUser.tier==='free' ? `${currentUser.credits} CP` : '∞ CP'}
+                  </div>
+                  <button className="avatar-upload-btn" onClick={() => avatarInputRef.current?.click()}>
+                    🖇️ Fotoğrafı Değiştir
+                  </button>
+               </div>
+
+              {/* Tabs */}
+              <div style={{display:'flex', borderBottom:'1px solid rgba(212,175,55,0.2)', marginBottom:'1.5rem'}}>
+                {(['info','history','daily'] as const).map(tab => (
+                  <button key={tab} onClick={()=>setProfileTab(tab)} style={{flex:1, padding:'0.8rem', background:'transparent', border:'none', borderBottom: profileTab===tab ? '2px solid #D4AF37' : '2px solid transparent', color: profileTab===tab ? '#D4AF37' : 'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:'Poppins', fontWeight:600, fontSize:'0.9rem', letterSpacing:'1px', transition:'0.3s'}}>
+                    {tab==='info' ? '👤 ' + (t.ovw||'Hesap') : tab==='history' ? `📜 ${t.crmHistory||'Geçmiş'}` : '🕯️ ' + (t.savedNotesTitle||'Günlük')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Info Tab */}
+              {profileTab === 'info' && (
+                <div>
+                  <div style={{background:'rgba(255,255,255,0.02)', padding:'1.2rem 1.5rem', borderRadius:'15px', border:'1px solid rgba(212,175,55,0.15)', marginBottom:'1rem'}}>
+                    {[
+                      { label: t.credits, value: currentUser.tier === 'free' ? currentUser.credits : t.infinite },
+                      { label: 'Doğum Tarihi', value: currentUser.birthDate || 'Bilinmiyor' },
+                      { label: 'Burç', value: currentUser.horoscope ? `${currentUser.horoscope.icon} ${currentUser.horoscope.name}` : 'Bilinmiyor' },
+                      { label: (currentUser.warnings||0) > 0 ? `⚠️ ${t.warningsText}` : t.warningsText, value: `${currentUser.warnings||0} / 3`, danger: (currentUser.warnings||0) > 0 },
+                      { label: 'Tier', value: currentUser.tier.toUpperCase() },
+                      { label: 'Toplam Fal', value: pastFortunes.filter(f=>f.username===currentUser.username).length },
+                    ].map((row, i) => (
+                      <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none'}}>
+                        <span style={{opacity:0.6, fontSize:'0.9rem'}}>{row.label}</span>
+                        <strong className={(row as any).danger ? 'pulse-error' : ''} style={{color: (row as any).danger ? '#ff4d4d' : '#D4AF37'}}>{row.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                  {(currentUser.warnings||0) > 0 && <p style={{color:'#ff4d4d', fontSize:'0.8rem', textAlign:'center', marginBottom:'1rem', opacity:0.8}}>{t.warningLimit}</p>}
+                  <button className="btn-upload" style={{width:'100%', margin:0, padding:'1rem'}} onClick={handleLogout}>{t.logout}</button>
+                </div>
+              )}
+
+              {/* History Tab */}
+              {profileTab === 'history' && (
+                <div style={{overflowY:'auto', maxHeight:'480px', display:'flex', flexDirection:'column', gap:'1rem', paddingRight:'0.5rem'}}>
+                  {pastFortunes.filter(f=>f.username===currentUser.username).length === 0 ? (
+                    <div style={{textAlign:'center', padding:'3rem', opacity:0.4}}>
+                      <div style={{fontSize:'3rem', marginBottom:'1rem'}}>☕</div>
+                      <p>Henüz hiç fal taratmadın.</p>
+                    </div>
+                  ) : (
+                    pastFortunes.filter(f=>f.username===currentUser.username).map((fort, i) => (
+                      <div key={fort.id} style={{display:'flex', gap:'1rem', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:'16px', padding:'1rem', transition:'0.3s', cursor:'default'}} onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(212,175,55,0.4)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(212,175,55,0.1)')}>
+                        {/* Thumbnail */}
+                        <img src={fort.imageUrl} alt="fal" style={{width:'70px', height:'70px', borderRadius:'12px', objectFit:'cover', flexShrink:0, border:'1px solid rgba(212,175,55,0.3)'}} />
+                        <div style={{flex:1, minWidth:0}}>
+                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.4rem'}}>
+                            <span style={{color:'#D4AF37', fontSize:'0.75rem', letterSpacing:'1px', fontWeight:600}}>FAL #{pastFortunes.filter(f=>f.username===currentUser.username).length - i}</span>
+                            {fort.mood && <span style={{fontSize:'1.1rem'}}>{fort.mood==='sad'?'😔':fort.mood==='curious'?'🤔':fort.mood==='happy'?'😊':'🔥'}</span>}
+                          </div>
+                          <div style={{fontSize:'0.78rem', opacity:0.5, marginBottom:'0.5rem'}}>🕐 {fort.date}</div>
+                          <div style={{display:'flex', gap:'0.4rem', flexWrap:'wrap'}}>
+                            {fort.highlights?.slice(0,3).map((h:any, hi:number) => (
+                              <span key={hi} style={{background:'rgba(212,175,55,0.1)', border:'1px solid rgba(212,175,55,0.2)', borderRadius:'8px', padding:'0.2rem 0.5rem', fontSize:'0.7rem', color:'#D4AF37'}}>{h.word}</span>
+                            ))}
+                          </div>
+                          <p style={{fontSize:'0.78rem', color:'rgba(255,255,255,0.6)', marginTop:'0.5rem', lineHeight:1.5, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical'}}>{fort.fortune?.split('\n')[0]}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Daily Notes Tab */}
+              {profileTab === 'daily' && (
+                <div style={{overflowY:'auto', maxHeight:'480px', display:'flex', flexDirection:'column', gap:'1rem', paddingRight:'0.5rem'}}>
+                   {savedNotes.length === 0 ? (
+                     <div style={{textAlign:'center', padding:'3rem', opacity:0.4}}>
+                       <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📜</div>
+                       <p>{t.noSavedNotes || 'Henüz kaydedilmiş fısıltın yok.'}</p>
+                     </div>
+                   ) : (
+                     savedNotes.map(n => (
+                       <div key={n.id} style={{background:'rgba(255,255,255,0.02)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:'16px', padding:'1.5rem', borderLeft:'4px solid #D4AF37', position:'relative'}}>
+                          <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:'#D4AF37', fontWeight:700, marginBottom:'0.8rem', letterSpacing:'1px'}}>
+                             <span>FISILTI</span>
+                             <span>{n.date}</span>
+                          </div>
+                          <p style={{fontSize:'0.9rem', color:'#EAEAEA', lineHeight:1.7, fontStyle:'italic', margin:0}}>"{n.text}"</p>
+                          <button onClick={()=>{setSavedNotes(savedNotes.filter(x=>x.id!==n.id))}} style={{marginTop:'1rem', background:'transparent', border:'none', color:'#ff4d4d', opacity:0.5, fontSize:'0.75rem', cursor:'pointer', padding:0}}>{t.deleteNote}</button>
+                       </div>
+                     ))
+                   )}
+                </div>
               )}
            </div>
         </div>
       )}
 
+
+       {showAvatarModal && avatarPreview && (
+         <div className="modal-overlay" onClick={() => setShowAvatarModal(false)} style={{zIndex: 100002}}>
+            <div className="fancy-modal" onClick={e => e.stopPropagation()} style={{maxWidth:'400px', padding:'2.5rem'}}>
+               <button className="modal-close-btn" onClick={() => setShowAvatarModal(false)}>✕</button>
+               <div className="avatar-preview-content">
+                  <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.8rem', marginBottom:'1.5rem'}}>Yeni Profil Fotoğrafın</h3>
+                  <div className="preview-avatar-circle">
+                     <img src={avatarPreview} alt="preview" />
+                  </div>
+                  <p style={{fontSize:'0.9rem', opacity:0.8, marginBottom:'2rem', lineHeight:1.5}}>Bu fotoğrafı profilinde mistik bir mühür olarak kullanmak istediğine emin misin?</p>
+                  <div style={{display:'flex', gap:'1rem'}}>
+                     <button className="btn-upload" style={{flex:1, margin:0, background:'transparent', border:'1px solid rgba(255,255,255,0.2)'}} onClick={() => setShowAvatarModal(false)}>İptal</button>
+                     <button className="btn-upload" style={{flex:1, margin:0}} onClick={handleAvatarConfirm}>Onayla</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+       )}
       {showAuthModal && (
         <div className="modal-overlay" onClick={()=>setShowAuthModal(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'400px'}}>
-              <h2 className="title-font" style={{textAlign:'center', color:'#D4AF37'}}>{authMode==='login'?t.loginBtn:t.registerBtn}</h2>
-              <input className="nai-input" placeholder="User" value={authInp.user} onChange={e=>setAuthInp(p=>({...p,user:e.target.value}))} />
-              <input className="nai-input" type="password" placeholder="Pass" value={authInp.pass} onChange={e=>setAuthInp(p=>({...p,pass:e.target.value}))} />
-              {authError && <p style={{color:'#ff4d4d', textAlign:'center'}}>{authError}</p>}
-              <button className="btn-upload" style={{width:'100%'}} onClick={handleAuth}>{authMode==='login'?t.loginBtn:t.registerBtn}</button>
-              <p onClick={()=>setAuthMode(authMode==='login'?'register':'login')} style={{textAlign:'center', cursor:'pointer', color:'#D4AF37'}}>{authMode==='login'?'Hesap Aç':'Giriş Yap'}</p>
+           <div className="fancy-modal auth-modal" onClick={e=>e.stopPropagation()}>
+              <button className="modal-close-btn" onClick={()=>setShowAuthModal(false)}>✕</button>
+              
+              <div className="auth-tabs">
+                <button className={`auth-tab ${authMode==='login'?'active':''}`} onClick={()=>{setAuthMode('login'); setAuthError(null);}}>{t.authLogin}</button>
+                <button className={`auth-tab ${authMode==='register'?'active':''}`} onClick={()=>{setAuthMode('register'); setAuthError(null);}}>{t.authReg}</button>
+              </div>
+
+              {authMode === 'forgot' ? (
+                <>
+                  <h3 className="title-font" style={{color:'#D4AF37', textAlign:'center', marginBottom:'1.5rem'}}>Şifre Sıfırlama</h3>
+                  <input placeholder={t.username} value={authInp.user} onChange={e=>setAuthInp({...authInp, user: e.target.value})} className="auth-input" />
+                  <input placeholder="Şanslı Kelimeniz" value={authInp.luckyWord} onChange={e=>setAuthInp({...authInp, luckyWord: e.target.value})} className="auth-input" />
+                  
+                  <div style={{position:'relative', width:'100%', marginBottom:'1rem'}}>
+                    <input type={showPass ? "text" : "password"} placeholder="Yeni Şifre" value={authInp.pass} onChange={e=>setAuthInp({...authInp, pass: e.target.value})} className="auth-input" />
+                  </div>
+                  <div style={{position:'relative', width:'100%', marginBottom:'1.5rem'}}>
+                    <input type={showPass ? "text" : "password"} placeholder="Yeni Şifre (Tekrar)" value={authInp.confirmPass} onChange={e=>setAuthInp({...authInp, confirmPass: e.target.value})} className="auth-input" />
+                  </div>
+
+                  {authInp.pass && authInp.confirmPass && authInp.pass !== authInp.confirmPass && (
+                    <div style={{color:'#ff8c00', fontSize:'0.85rem', marginBottom:'1rem', textAlign:'center', fontWeight:600}}>Şifreler birbiriyle eşleşmiyor, lütfen kontrol et kanka.</div>
+                  )}
+
+                  <div style={{display:'flex', alignItems:'center', gap:'0.8rem', marginBottom:'2rem', padding:'0 0.5rem'}}>
+                    <input type="checkbox" id="consent" checked={authInp.consent} onChange={e=>setAuthInp({...authInp, consent: e.target.checked})} style={{width:'18px', height:'18px', accentColor:'#D4AF37'}} />
+                    <label htmlFor="consent" style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.7)', cursor:'pointer'}}>Şifremi sıfırlamayı ve eski şifremi iptal etmeyi onaylıyorum.</label>
+                  </div>
+
+                  <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem', opacity: authInp.consent ? 1 : 0.5}} disabled={!authInp.consent} onClick={handlePasswordRecovery}>Şifreyi Sıfırla</button>
+                  <button className="text-btn" style={{width:'100%', marginTop:'1rem', opacity:0.6}} onClick={()=>setAuthMode('login')}>Geri Dön</button>
+                </>
+              ) : (
+                <>
+                  <input placeholder={t.username} value={authInp.user} onChange={e=>setAuthInp({...authInp, user: e.target.value})} className="auth-input" />
+                  
+                  <div style={{position:'relative', width:'100%', marginBottom: authMode==='register' ? '1.5rem' : '0.5rem'}}>
+                    <input type={showPass ? "text" : "password"} placeholder={t.pass} value={authInp.pass} onChange={e=>setAuthInp({...authInp, pass: e.target.value})} className="auth-input" />
+                    <button type="button" onClick={()=>setShowPass(!showPass)} style={{position:'absolute', right:'1rem', top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', color:'rgba(212,175,55,0.8)', cursor:'pointer'}}>
+                      {showPass ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+
+                  {authMode === 'login' && (
+                    <div style={{textAlign:'right', marginBottom:'2rem', paddingRight:'0.5rem'}}>
+                      <button className="link-btn" onClick={()=>setAuthMode('forgot')}>Şifremi Unuttum</button>
+                    </div>
+                  )}
+
+                  {authMode === 'register' && (
+                    <>
+                      <div style={{marginBottom:'1.5rem'}}>
+                        <div style={{fontSize:'0.75rem', color:'#D4AF37', marginBottom:'0.5rem', marginLeft:'0.5rem', fontWeight:600}}>Doğum Tarihi</div>
+                        <input type="date" value={authInp.birthDate} onChange={e=>setAuthInp({...authInp, birthDate: e.target.value})} className="auth-input" style={{marginBottom:0}} />
+                      </div>
+                      <div style={{marginBottom:'2.5rem'}}>
+                        <input placeholder="Şanslı Kelimeniz" value={authInp.luckyWord} onChange={e=>setAuthInp({...authInp, luckyWord: e.target.value})} className="auth-input" style={{marginBottom:'0.4rem'}} />
+                        <div style={{color:'#D4AF37', fontSize:'0.75rem', marginLeft:'0.5rem', fontWeight:500}}>Mistik şanslı kelimenizi asla unutmayın; şifrenizi kurtarmanın tek yolu budur!</div>
+                      </div>
+                    </>
+                  )}
+
+                  {authError && <div style={{color:'#ff4d4d', fontSize:'0.9rem', marginBottom:'1.5rem', textAlign:'center', background:'rgba(255,77,77,0.1)', border:'1px solid rgba(255,77,77,0.3)', padding:'0.8rem', borderRadius:'10px', fontWeight:600}}>{authError}</div>}
+
+                  <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={handleAuth}>{authMode === 'login' ? t.authLogin : t.authReg}</button>
+                </>
+              )}
            </div>
         </div>
       )}
 
       {showPremium && (
         <div className="modal-overlay" onClick={()=>setShowPremium(false)}>
-           <div className="fancy-modal store-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'800px'}}>
-              <h2 className="title-font" style={{textAlign:'center', color:'#D4AF37', marginBottom:'2rem'}}>{t.storeTitle}</h2>
-              <div className="premium-grid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem'}}>
-                {[{n:'Standard',a:10,p:'$4.99',t:'premium'},{n:'Extra',a:50,p:'$19.99',t:'premium-extra'},{n:'Elite',a:999,p:'$49.99',t:'elite'}].map(pkg=>(
-                  <div key={pkg.n} className="pkg-card" style={{padding:'2rem', background:'rgba(255,255,255,0.05)', borderRadius:'20px', textAlign:'center', border:'1px solid rgba(212,175,55,0.2)'}}>
-                    <h3 className="title-font">{pkg.n}</h3><div style={{fontSize:'2rem', color:'#FFDF73'}}>{pkg.p}</div><button className="btn-upload" style={{width:'100%'}} onClick={()=>{ if(!currentUser)setShowAuthModal(true); else setPurchasingPkg({amount:pkg.a, tier:pkg.t, name:pkg.n}); }}>Satin Al</button>
-                  </div>
-                ))}
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'4rem'}}>
+              <button className="modal-close-btn" onClick={()=>setShowPremium(false)}>✕</button>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'3.2rem', textAlign:'center', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.3))'}}>Oracle Store</h2>
+              <p style={{color:'#fff', opacity:0.8, marginBottom:'3rem', textAlign:'center', fontSize:'1.1rem'}}>Invest in your cosmic destiny.</p>
+              
+              <div className="store-grid" style={{gap:'1.5rem', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', padding:'1rem'}}>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'₺20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.95))', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeBasic}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.b}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺20</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.b[0]}</li><li>{t.storeFeatures?.b[1]}</li><li>{t.storeFeatures?.b[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.4), rgba(0,0,0,0.95))', borderColor:'rgba(0,180,80,0.3)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#6ee7b7', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeCareer}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.c}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(0,180,80,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.c[0]}</li><li>{t.storeFeatures?.c[1]}</li><li>{t.storeFeatures?.c[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'₺50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.05), rgba(0,0,0,0.95))', borderColor:'rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeSupreme}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.s}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺50</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.s[0]}</li><li>{t.storeFeatures?.s[1]}</li><li>{t.storeFeatures?.s[2]}</li></ul>
+                 </div>
+                 
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.3), rgba(0,0,0,0.95))', borderColor:'rgba(200,50,100,0.3)', minHeight:'200px'}}>
+                    <h3 className="title-font" style={{color:'#f9a8d4', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeLove}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.l}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(200,50,100,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
+                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.l[0]}</li><li>{t.storeFeatures?.l[1]}</li><li>{t.storeFeatures?.l[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'₺99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.1), rgba(20,15,10,0.95))', borderColor:'rgba(255,223,115,0.4)', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>✦</div>
+                    <h3 className="title-font" style={{color:'#FFDF73', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremium}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.p}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(255,223,115,0.2)', paddingBottom:'0.5rem'}}>₺99 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.p[0]}</li><li>{t.storeFeatures?.p[1]}</li><li>{t.storeFeatures?.p[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storePremiumExtra, price:'₺169 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,20,40,0.95))', borderColor:'#80BFFF', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>⚡</div>
+                    <h3 className="title-font" style={{color:'#80BFFF', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremiumExtra}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.pe}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>₺169 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.pe[0]}</li><li>{t.storeFeatures?.pe[1]}</li><li>{t.storeFeatures?.pe[2]}</li></ul>
+                 </div>
+                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'elite', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'200px'}}>
+                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>✨</div>
+                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeElite}</h3>
+                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.e}</p>
+                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺249 / mo</div>
+                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.e[0]}</li><li>{t.storeFeatures?.e[1]}</li><li>{t.storeFeatures?.e[2]}</li></ul>
+                 </div>
               </div>
-              {purchasingPkg && (
-                <div className="confirm-box" style={{marginTop:'2rem', padding:'1rem', border:'1px solid #D4AF37', borderRadius:'10px'}}>
-                  <p style={{textAlign:'center'}}>{purchasingPkg.name} Onayla</p>
-                  <input className="nai-input" type="password" placeholder="Şifreniz" value={purchasePassInput} onChange={e=>setPurchasePassInput(e.target.value)} />
-                  <button className="btn-upload" style={{width:'100%'}} onClick={confirmPurchase}>Satin Al</button>
-                </div>
-              )}
+           </div>
+        </div>
+      )}
+
+      {purchasingPkg && (
+        <div className="modal-overlay" onClick={()=>{setPurchasingPkg(null); setPurchasePassInput(''); setPurchaseError(null);}} style={{zIndex:100001}}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'450px', padding:'3rem', textAlign:'center'}}>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', margin:'0 0 0.5rem 0'}}>Checkout</h2>
+              <p style={{color:'#EAEAEA', opacity:0.8, marginBottom:'2rem'}}>{purchasingPkg.name} — <strong>{purchasingPkg.price}</strong></p>
+              
+              <div style={{background:'rgba(0,0,0,0.3)', padding:'1.5rem', borderRadius:'15px', border:'1px solid rgba(255,255,255,0.1)', marginBottom:'2rem'}}>
+                 <div style={{fontSize:'0.9rem', color:'#aaa', marginBottom:'1rem'}}>Confirm Purchase Authorization</div>
+                 <input type="password" placeholder={t.pass} value={purchasePassInput} onChange={e=>setPurchasePassInput(e.target.value)} onKeyUp={e => e.key==='Enter' && confirmPurchase()} style={{width:'100%', padding:'1rem', borderRadius:'10px', border:'1px solid rgba(212,175,55,0.4)', background:'rgba(0,0,0,0.6)', color:'#fff', outline:'none', textAlign:'center', letterSpacing:'3px', fontSize:'1.2rem'}} autoFocus />
+                 {purchaseError && <div style={{color:'#ff4d4d', fontSize:'0.85rem', marginTop:'1rem', fontWeight:600}}>{purchaseError}</div>}
+              </div>
+
+              <div style={{display:'flex', gap:'1rem'}}>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1rem', background:'transparent', color:'#EAEAEA', border:'1px solid rgba(255,255,255,0.2)', boxShadow:'none'}} onClick={()=>{setPurchasingPkg(null); setPurchasePassInput(''); setPurchaseError(null);}}>Cancel</button>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1rem'}} onClick={confirmPurchase}>Confirm</button>
+              </div>
            </div>
         </div>
       )}
 
       {showAdmin && (
         <div className="modal-overlay" onClick={()=>setShowAdmin(false)}>
-           <div className="fancy-modal admin-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'900px', width:'90%'}}>
-              {!isAdminUnlocked ? <div className="admin-lock" style={{textAlign:'center', padding:'4rem'}}>🛡️ <input className="nai-input" type="password" placeholder="010409" autoFocus onKeyDown={e=>{if(e.key==='Enter' && e.currentTarget.value==='010409'){setIsAdminUnlocked(true);addToast('Admin');}}} /></div> : 
-              <>
-                <div className="admin-tabs" style={{display:'flex', gap:'1rem', marginBottom:'1.5rem'}}>{(['users','fortunes','logs'] as const).map(tab=><button key={tab} className={adminTab===tab?'active':''} onClick={()=>setAdminTab(tab)} style={{flex:1, padding:'1rem', background:adminTab===tab?'#D4AF37':'#222'}}>{tab.toUpperCase()}</button>)}</div>
-                <div className="admin-content" style={{maxHeight:'50vh', overflowY:'auto'}}>
-                  {adminTab==='users' && users.map(u=><div key={u.id} className="admin-row" style={{display:'flex', justifyContent:'space-between', padding:'0.5rem', borderBottom:'1px solid #333'}}>{u.username} ({u.credits} CP) <div style={{display:'flex', gap:'0.5rem'}}><button onClick={()=>setUsers(p=>p.map(x=>x.id===u.id?{...x,credits:x.credits+10}:x))}>+10</button><button onClick={()=>setUsers(p=>p.filter(x=>x.id!==u.id))}>DEL</button></div></div>)}
-                  {adminTab==='fortunes' && pastFortunes.map(f=><div key={f.id} style={{padding:'0.5rem', borderBottom:'1px solid #222'}}>{f.username}: {f.fortune.slice(0,50)}...</div>)}
-                  {adminTab==='logs' && logs.map((l,i)=><div key={i} style={{fontSize:'12px', color:'#0f0', fontFamily:'monospace'}}>{l}</div>)}
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:0, height:'85vh'}}>
+               <button className="modal-close-btn" onClick={()=>setShowAdmin(false)}>✕</button>
+               {!isAdminUnlocked ? (
+                 <div className="admin-lock">
+                    <div className="mystic-ring" style={{width:'180px', height:'180px', opacity:0.3}}></div>
+                    <div className="mystic-ring" style={{width:'240px', height:'240px', opacity:0.15, animationDirection:'reverse', animationDuration:'15s'}}></div>
+                    <LockIcon className="lock-ping" />
+                    <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.5rem', letterSpacing:'8px', textTransform:'uppercase', marginTop:'1rem', textShadow:'0 0 20px rgba(212,175,55,0.4)'}}>{t.adminGatewayTitle}</h2>
+                    <div style={{color:'rgba(255,255,255,0.4)', fontSize:'0.9rem', marginBottom:'-0.5rem', letterSpacing:'2px'}}>{t.adminGatewayPass.toUpperCase()}</div>
+                    <input id="adminPassInput" className="admin-lock-input" type="password" placeholder="••••••" onKeyUp={e => e.key==='Enter' && (e.currentTarget.value==='010409'?setIsAdminUnlocked(true):addToast('Access Denied','error'))} />
+                    <button className="btn-upload" style={{marginTop:'1.5rem', padding:'1rem 4rem', fontSize:'1.1rem', background:'linear-gradient(45deg, #8B6B3F, #D4AF37)'}} onClick={()=>{
+                      const inp = document.getElementById('adminPassInput') as HTMLInputElement;
+                      if(inp && inp.value==='010409') setIsAdminUnlocked(true); else addToast('Access Denied','error');
+                    }}>{t.adminBtnConfirm}</button>
+                 </div>
+               ) : (
+                <div className="admin-layout">
+                  <aside className="admin-sidebar">
+                    <h3 className="title-font" style={{color:'#D4AF37', marginBottom:'2rem', fontSize:'1.8rem', paddingLeft:'0.5rem'}}>{t.adminCrm}</h3>
+                    {['users','fortunes','messages','logs'].map(tab => (
+                      <button key={tab} className={`nav-item ${adminTab===tab?'active':''}`} onClick={()=>setAdminTab(tab as any)}>
+                         {tab === 'users' ? t.tabUsers : tab === 'fortunes' ? t.tabFortunes : tab === 'messages' ? t.tabMessages : t.tabLogs}
+                      </button>
+                    ))}
+                    <button className="nav-item" style={{color:'rgba(255,77,77,0.8)', marginTop:'auto', border:'1px solid rgba(255,77,77,0.2)'}} onClick={()=>setIsAdminUnlocked(false)}>{t.secureLogout}</button>
+                  </aside>
+                  
+                  <div className="admin-content">
+                    {adminTab === 'users' && (
+                      <div>
+                        <h2 className="title-font" style={{color:'#EAEAEA', fontSize:'2.2rem', marginBottom:'2rem'}}>{t.ovw}</h2>
+                        <div className="admin-stats-grid">
+                           <div className="admin-stat-card blue"><span>{t.statTotal}</span><strong>{users.length}</strong></div>
+                           <div className="admin-stat-card gold"><span>{t.statPremium}</span><strong>{users.filter(u=>u.tier!=='free').length}</strong></div>
+                           <div className="admin-stat-card red"><span>{t.statSuspended}</span><strong>{users.filter(u=>u.isBanned).length}</strong></div>
+                        </div>
+
+                        <div style={{background:'rgba(0,0,0,0.3)', borderRadius:'20px', border:'1px solid rgba(212,175,55,0.1)'}}>
+                          {users.map(u => (
+                            <div key={u.id} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div className="user-row" onClick={() => setSelectedUserId(selectedUserId === u.id ? null : u.id)} style={{cursor: 'pointer', border: 'none', background: selectedUserId === u.id ? 'rgba(212,175,55,0.05)' : 'transparent', borderBottom: 'none'}}>
+                                <div>
+                                  <strong style={{fontSize:'1.1rem', color:'#fff', marginRight:'1rem'}}>{u.username}</strong>
+                                  <code style={{color:'#D4AF37', background:'rgba(212,175,55,0.1)', padding:'0.2rem 0.6rem', borderRadius:'6px', fontSize:'0.85rem', marginRight:'1.5rem'}}>{u.pass}</code>
+                                  <span style={{opacity:0.6, fontSize:'0.9rem'}}>{t.credits} {u.credits}</span> • <span style={{color:'#D4AF37', fontSize:'0.9rem'}}>{u.tier === 'elite' ? t.storeElite : u.tier === 'premium-extra' ? t.storePremiumExtra : u.tier === 'premium' ? t.storePremium : u.tier.toUpperCase()}</span>
+                                  {u.isBanned && <span style={{color:'#ff4d4d', marginLeft:'1rem', fontWeight:600}}>{t.suspendedBadge}</span>}
+                                </div>
+                                <div style={{opacity: 0.5, transform: selectedUserId === u.id ? 'rotate(180deg)' : 'none', transition: '0.3s'}}>▼</div>
+                              </div>
+                              
+                              {selectedUserId === u.id && (
+                                <div style={{padding:'1.5rem', background:'rgba(0,0,0,0.4)', borderTop:'1px solid rgba(255,255,255,0.05)', display:'flex', flexDirection:'column', gap:'1.5rem'}}>
+                                   <div style={{display:'flex', gap:'2rem', flexWrap:'wrap'}}>
+                                     
+                                     {/* Credit Management */}
+                                     <div>
+                                        <h4 style={{color:'#D4AF37', marginBottom:'0.8rem', fontSize:'0.9rem', textTransform:'uppercase'}}>{t.crmCreditManage}</h4>
+                                        <div style={{display:'flex', gap:'0.5rem'}}>
+                                          <button className="text-btn" style={{border:'1px solid rgba(212,175,55,0.3)'}} onClick={() => {
+                                            const uList = users.map(x => x.id === u.id ? {...x, credits: Math.max(0, x.credits - 5)} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            if (currentUser?.id === u.id) { setCurrentUser({...u, credits: Math.max(0, u.credits - 5)}); lsSet('nai_current_user', {...u, credits: Math.max(0, u.credits - 5)}); }
+                                          }}>-5</button>
+                                          <button className="text-btn" style={{border:'1px solid rgba(212,175,55,0.3)'}} onClick={() => {
+                                            const uList = users.map(x => x.id === u.id ? {...x, credits: x.credits + 5} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            if (currentUser?.id === u.id) { setCurrentUser({...u, credits: u.credits + 5}); lsSet('nai_current_user', {...u, credits: u.credits + 5}); }
+                                          }}>+5</button>
+                                        </div>
+                                     </div>
+
+                                     {/* Tier Management */}
+                                     <div>
+                                        <h4 style={{color:'#D4AF37', marginBottom:'0.8rem', fontSize:'0.9rem', textTransform:'uppercase'}}>{t.crmTierManage}</h4>
+                                        <select value={u.tier} onChange={(e) => {
+                                            const uList = users.map(x => x.id === u.id ? {...x, tier: e.target.value as any} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            if (currentUser?.id === u.id) { setCurrentUser({...u, tier: e.target.value as any}); lsSet('nai_current_user', {...u, tier: e.target.value as any}); }
+                                        }} style={{background:'rgba(0,0,0,0.5)', color:'#fff', padding:'0.5rem 1rem', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'10px', outline:'none'}}>
+                                           <option value="free">Free</option>
+                                           <option value="premium">Premium</option>
+                                           <option value="premium-extra">Premium Extra</option>
+                                           <option value="elite">Elite (Oracle)</option>
+                                        </select>
+                                     </div>
+
+                                     {/* State Management */}
+                                     <div>
+                                        <h4 style={{color:'#D4AF37', marginBottom:'0.8rem', fontSize:'0.9rem', textTransform:'uppercase'}}>{t.crmSecurity}</h4>
+                                        <div style={{display:'flex', gap:'0.5rem'}}>
+                                          <button onClick={()=>{
+                                            const uList = users.map(x => x.id === u.id ? {...x, isBanned: !x.isBanned} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            addLog(u.isBanned ? `User ${u.username} unbanned` : `User ${u.username} suspended`);
+                                            if (currentUser?.id === u.id) { setCurrentUser({...u, isBanned: !u.isBanned}); lsSet('nai_current_user', {...u, isBanned: !u.isBanned}); }
+                                          }} className="text-btn" style={{background: u.isBanned ? 'rgba(212,175,55,0.2)' : 'rgba(255,77,77,0.1)', color: u.isBanned ? '#D4AF37' : '#ff4d4d', border: `1px solid ${u.isBanned ? '#D4AF37' : 'rgba(255,77,77,0.5)'}`}}>
+                                            {u.isBanned ? t.btnRestore : t.btnSuspend}
+                                          </button>
+                                          <button onClick={()=>{const n=users.filter(x=>x.id!==u.id); setUsers(n); lsSet('nai_users',n)}} className="text-btn" style={{background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)'}}>{t.btnDelete}</button>
+                                        </div>
+                                     </div>
+                                   </div>
+
+                                   {/* Oracle History */}
+                                   <div>
+                                      <h4 style={{color:'#D4AF37', marginBottom:'1rem', fontSize:'0.9rem', textTransform:'uppercase', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>{t.crmHistory}</h4>
+                                      <div style={{display:'flex', flexDirection:'column', gap:'0.8rem', maxHeight:'250px', overflowY:'auto', paddingRight:'0.5rem'}}>
+                                         {pastFortunes.filter(f => f.username === u.username).length === 0 ? (
+                                           <span style={{opacity:0.5, fontSize:'0.9rem', fontStyle:'italic'}}>{t.crmNoHistory}</span>
+
+                                         ) : (
+                                           pastFortunes.filter(f => f.username === u.username).map(f => (
+                                              <div key={f.id} style={{background:'rgba(255,255,255,0.02)', padding:'1.2rem', borderRadius:'10px', borderLeft:'3px solid #D4AF37'}}>
+                                                <div style={{fontSize:'0.8rem', color:'#D4AF37', marginBottom:'0.5rem', fontWeight:600}}>{f.date}</div>
+                                                <div style={{fontSize:'0.95rem', color:'#EAEAEA', lineHeight: 1.6}}>{f.fortune.length > 200 ? f.fortune.substring(0, 200) + '...' : f.fortune}</div>
+                                              </div>
+                                           ))
+                                         )}
+                                      </div>
+                                   </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {adminTab === 'fortunes' && (
+                      <div>
+                        <h2 className="title-font" style={{color:'#EAEAEA', fontSize:'2rem', marginBottom:'2rem'}}>{t.tabFortunes}</h2>
+                        <div style={{background:'rgba(0,0,0,0.3)', borderRadius:'20px', border:'1px solid rgba(212,175,55,0.1)'}}>
+                           {pastFortunes.map(f => (
+                             <div key={f.id} className="user-row">
+                               <div><strong style={{color:'#D4AF37'}}>{f.username}</strong> <span style={{opacity:0.5, fontSize:'0.8rem', marginLeft:'1rem'}}>{f.date}</span></div>
+                               <button onClick={()=>{const n=pastFortunes.filter(x=>x.id!==f.id); setPastFortunes(n); lsSet('nai_fortunes',n)}} className="text-btn" style={{background:'transparent', color:'rgba(255,77,77,0.6)'}}>{t.btnErase}</button>
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                    )}
+                    {adminTab === 'messages' && (
+                      <div>
+                        <h2 className="title-font" style={{color:'#EAEAEA', fontSize:'2rem', marginBottom:'2rem'}}>{t.tabMessages}</h2>
+                        <div>
+                          {supportMessages.map(msg => {
+                            const userObj = users.find(u => u.username === msg.user);
+                            return (
+                              <div key={msg.id} className="message-box">
+                                 <div className="meta">
+                                   <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                      <span style={{color:'#D4AF37', fontWeight:600}}>{msg.user}</span>
+                                      {userObj?.isBanned && (
+                                        <button 
+                                          onClick={() => {
+                                            const uList = users.map(x => x.id === userObj.id ? {...x, isBanned: false} : x);
+                                            setUsers(uList); lsSet('nai_users', uList);
+                                            addLog(`User ${userObj.username} unbanned via messages`);
+                                            addToast('User Unbanned', 'success');
+                                          }}
+                                          className="text-btn" 
+                                          style={{background:'rgba(212,175,55,0.2)', color:'#D4AF37', border:'1px solid #D4AF37', padding:'0.3rem 0.8rem', fontSize:'0.75rem'}}
+                                        >
+                                          Banı Kaldır
+                                        </button>
+                                      )}
+                                   </div>
+                                   <span style={{opacity:0.6}}>{msg.date}</span>
+                                 </div>
+                                 <div className="content">{msg.text}</div>
+                                 <div style={{marginTop:'1.5rem', padding:'1rem', background:'rgba(0,0,0,0.2)', borderRadius:'12px', border:'1px solid rgba(212,175,55,0.1)'}}>
+                                    <div style={{color:'#D4AF37', fontSize:'0.75rem', marginBottom:'0.8rem', fontWeight:700, textTransform:'uppercase'}}>Cevap Yaz</div>
+                                    <div style={{display:'flex', gap:'1rem'}}>
+                                       <textarea 
+                                         value={adminReplyInput[msg.id] || ''} 
+                                         onChange={e => setAdminReplyInput({...adminReplyInput, [msg.id]: e.target.value})}
+                                         placeholder="Yanıtınızı buraya yazın..."
+                                         style={{flex:1, background:'rgba(0,0,0,0.5)', color:'#fff', border:'1px solid rgba(212,175,55,0.3)', borderRadius:'10px', padding:'0.8rem', outline:'none', fontSize:'0.9rem', minHeight:'60px', resize:'vertical'}}
+                                       />
+                                       <button 
+                                         onClick={() => handleAdminReply(msg.id)}
+                                         className="btn-upload" 
+                                         style={{margin:0, width:'100px', height:'auto', padding:'0.5rem', fontSize:'0.85rem'}}
+                                       >
+                                         Gönder
+                                       </button>
+                                    </div>
+                                    {msg.adminReply && (
+                                      <div style={{marginTop:'1rem', color:'#0f0', fontSize:'0.85rem', background:'rgba(0,255,0,0.05)', padding:'0.5rem', borderRadius:'8px', borderLeft:'3px solid #0f0'}}>
+                                        <strong>Gönderilen Yanıt:</strong> {msg.adminReply}
+                                      </div>
+                                    )}
+                                 </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {adminTab === 'logs' && (
+                      <div className="log-terminal" style={{background:'rgba(0,0,0,0.8)', border:'1px solid rgba(212,175,55,0.2)', color:'#D4AF37', padding:'2rem', height:'100%', fontFamily:'monospace', borderRadius:'20px', overflowY:'auto'}}>
+                         {logs.length === 0 ? (
+                           <p style={{opacity:0.5}}>&gt; No logs available.</p>
+                         ) : (
+                           logs.map((log, i) => <p key={i} style={{marginBottom:'0.5rem', fontSize:'0.85rem'}}>&gt; {log}</p>)
+                         )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </>}
+               )}
+
            </div>
         </div>
       )}
 
       {showReviewModal && (
-        <div className="modal-overlay" onClick={()=>setShowReviewModal(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px'}}>
-              <h2 className="title-font" style={{color:'#D4AF37', textAlign:'center'}}>{t.writeReviewBtn}</h2>
-              <textarea className="nai-input" style={{height:'100px'}} value={reviewInput.text} onChange={e=>setReviewInput(p=>({...p,text:e.target.value}))}></textarea>
-              <div className="star-picker" style={{display:'flex', justifyContent:'center', gap:'0.5rem', margin:'1rem 0'}}>{[1,2,3,4,5].map(s=><button key={s} onClick={()=>setReviewInput(p=>({...p,stars:s}))} style={{fontSize:'2rem', background:'transparent', border:'none', color:reviewInput.stars>=s?'gold':'#444'}}>★</button>)}</div>
-              <button className="btn-upload" style={{width:'100%'}} onClick={handleReviewSubmit}>Gonder</button>
+        <div className="modal-overlay" style={{zIndex: 1000000}} onClick={()=>setShowReviewModal(false)}>
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'3rem', maxWidth:'450px', background:'linear-gradient(160deg, #1a1a1a, #0a0a0a)', border:'1px solid rgba(212,175,55,0.4)', borderRadius:'30px', boxShadow:'0 20px 50px rgba(0,0,0,0.8)'}}>
+              <button className="modal-close-btn" onClick={()=>setShowReviewModal(false)}>✕</button>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem', textAlign:'center', textShadow:'0 0 15px rgba(212,175,55,0.3)'}}>{t.writeReviewBtn}</h2>
+              <p style={{color:'rgba(255,255,255,0.6)', textAlign:'center', marginBottom:'2rem', fontSize:'0.9rem'}}>Deneyimini toplulukla paylaş.</p>
+              
+              <div className="review-stars-input">
+                 {[1,2,3,4,5].map(s => (
+                   <span 
+                    key={s} 
+                    onClick={()=>setReviewInput({...reviewInput, stars: s})} 
+                    className={`star-input ${reviewInput.stars >= s ? 'active' : ''}`}
+                    style={{color: reviewInput.stars >= s ? '#FFDF73' : 'rgba(255,255,255,0.1)'}}
+                   >
+                    ★
+                   </span>
+                 ))}
+              </div>
+
+              <textarea 
+                className="review-textarea"
+                placeholder={t.reviewTitle + '...'} 
+                value={reviewInput.text} 
+                onChange={e=>setReviewInput({...reviewInput, text: e.target.value})}
+              ></textarea>
+
+              <button 
+                className="btn-upload" 
+                style={{margin:0, width:'100%', padding:'1.3rem', fontSize:'1.1rem', letterSpacing:'2px'}} 
+                onClick={handleReviewSubmit}
+              >
+                {t.adminBtnConfirm}
+              </button>
            </div>
         </div>
       )}
 
       {showDailyNote && (
         <div className="modal-overlay" onClick={()=>setShowDailyNote(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px', textAlign:'center'}}>
-              <h2 className="title-font" style={{color:'#D4AF37'}}>{t.dailyTitle}</h2>
-              <div className="note-box" style={{padding:'2rem', background:'rgba(212,175,55,0.05)', borderRadius:'10px', margin:'1.5rem 0'}}><p>"{getDailyWhisper()}"</p></div>
-              {currentUser && <button className="btn-upload" style={{width:'100%'}} onClick={()=>{saveDailyNote();setShowDailyNote(false);}}>{t.saveWhisper}</button>}
+           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'500px', textAlign:'center', padding:'4rem 3rem'}}>
+              <button className="modal-close-btn" onClick={()=>setShowDailyNote(false)}>✕</button>
+              <div style={{fontSize:'4rem', marginBottom:'1.5rem', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.4))'}}>🕯️</div>
+              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', marginBottom:'1rem'}}>{t.dailyNoteTitle}</h2>
+              <div style={{height:'1px', background:'linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)', margin:'1.5rem 0'}}></div>
+              
+              <div style={{background:'rgba(212,175,55,0.03)', padding:'2rem', borderRadius:'25px', border:'1px solid rgba(212,175,55,0.15)', marginBottom:'2.5rem', position:'relative', overflow:'hidden'}}>
+                 <div style={{position:'absolute', top:0, left:0, fontSize:'3rem', opacity:0.05}}>❝</div>
+                 <p style={{fontSize:'1.1rem', color:'#EAEAEA', lineHeight:1.8, fontStyle:'italic', margin:0, position:'relative', zIndex:1}}>
+                   {getDailyWhisper()}
+                 </p>
+              </div>
+
+              <div style={{display:'flex', gap:'1rem'}}>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1.1rem', background:'transparent', color:'#EAEAEA', border:'1px solid rgba(255,255,255,0.2)'}} onClick={()=>setShowDailyNote(false)}>Kapat</button>
+                 <button className="btn-upload" style={{flex:1, margin:0, padding:'1.1rem'}} onClick={()=>{saveDailyNote(); setShowDailyNote(false);}}>
+                   {t.saveNoteBtn}
+                 </button>
+              </div>
            </div>
         </div>
       )}
-
       {showGiftModal && (
         <div className="modal-overlay" onClick={()=>setShowGiftModal(false)}>
-           <div className="fancy-modal gift-center-modal" onClick={e=>e.stopPropagation()}>
+           <div className="fancy-modal gift-center-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'650px'}}>
+              <button className="modal-close-btn" onClick={()=>setShowGiftModal(false)}>✕</button>
               <div className="gift-header" style={{textAlign:'center', marginBottom:'2rem'}}>
-                <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2rem'}}>{t.giftCenterTitle}</h2>
+                <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2rem'}}>{t.giftCenterTitle || 'Mistik Hediye Merkezi'}</h2>
                 <div className="gift-tabs" style={{display:'flex', gap:'1rem', justifyContent:'center', marginTop:'1rem'}}>
-                  <button className={giftTab==='wheel'?'active':''} onClick={()=>setGiftTab('wheel')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='wheel'?'#D4AF37':'#222', border:'none', color:giftTab==='wheel'?'#111':'#fff', cursor:'pointer'}}>🎡 {t.wheelTitle}</button>
+                  <button className={giftTab==='wheel'?'active':''} onClick={()=>setGiftTab('wheel')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='wheel'?'#D4AF37':'#222', border:'none', color:giftTab==='wheel'?'#111':'#fff', cursor:'pointer'}}>🎡 {t.wheelTitle || 'Şans Çarkı'}</button>
                   <button className={giftTab==='cups'?'active':''} onClick={()=>{
                     setGiftTab('cups');
-                    if(cupStarIndex===-1) setCupStarIndex(Math.floor(Math.random()*6));
-                  }} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='cups'?'#D4AF37':'#222', border:'none', color:giftTab==='cups'?'#111':'#fff', cursor:'pointer'}}>✨ {t.cupTitle}</button>
-                  <button className={giftTab==='destiny'?'active':''} onClick={()=>setGiftTab('destiny')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='destiny'?'#D4AF37':'#222', border:'none', color:giftTab==='destiny'?'#111':'#fff', cursor:'pointer'}}>🗺️ {t.destinyTitle || 'Kader Yolu'}</button>
+                    setCupStarIndex(Math.floor(Math.random() * 6));
+                    setCupAttempts(0);
+                    setCupsFlipped(new Array(6).fill(false));
+                  }} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='cups'?'#D4AF37':'#222', border:'none', color:giftTab==='cups'?'#111':'#fff', cursor:'pointer'}}>✨ {t.cupTitle || 'Yıldızlı Fincan'}</button>
+                  <button className={giftTab==='destiny'?'active':''} onClick={()=>setGiftTab('destiny')} style={{padding:'0.5rem 1rem', borderRadius:'10px', background:giftTab==='destiny'?'#D4AF37':'#222', border:'none', color:giftTab==='destiny'?'#111':'#fff', cursor:'pointer'}}>🗺️ Kader Yolu</button>
                 </div>
               </div>
-
+              
               <div className="gift-content">
-                {giftTab === 'wheel' && currentUser && (
-                  <div className="wheel-section" style={{position:'relative'}}>
-                     {cooldowns.wheel > 0 && currentUser.pass !== '010409' && (
-                       <div className="cooldown-overlay-gold">
-                         <div className="timer-box">
-                           <span className="timer-label">SONRAKİ ÇEVİRME</span>
-                           <div className="countdown-display">{formatCooldown(cooldowns.wheel)}</div>
-                         </div>
-                       </div>
-                     )}
-                     <div className="wheel-container">
-                        <div className="wheel-pointer"></div>
-                        <div className="wheel" style={{ transform: `rotate(${wheelRotation}deg)`, transition: isSpinning ? 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)' : 'none' }}>
-                           {[...Array(10)].map((_, i) => (
-                             <div key={i} className="wheel-segment" style={{ transform: `rotate(${i * 36}deg)` }}>
-                               <span>{['%10 🎟️', '%10 🎟️', '%20 🎫', '%20 🎫', '1 Fal 🍵', '1 Fal 🍵', 'Aşk ❤️', 'Para 💰', 'Tara 🔍', 'PREM 💎'][i]}</span>
-                             </div>
-                           ))}
-                        </div>
-                     </div>
-                     <div className="gift-controls">
-                        {giftMessage && <div className="gift-stat-msg" style={{margin:'1rem 0', color:'#D4AF37', fontWeight:700}}>{giftMessage}</div>}
-                        <button className="btn-upload" onClick={handleSpin} disabled={isSpinning || (cooldowns.wheel > 0 && currentUser.pass !== '010409')} style={{margin:0, width:'200px'}}>
-                          {isSpinning ? 'DÖNÜYOR...' : 'ÇEVİR'}
-                        </button>
-                     </div>
-                  </div>
-                )}
+                {giftTab==='wheel' ? (
+                  <div className="wheel-section" style={{textAlign:'center'}}>
+                    <div className="wheel-container">
+                      <div className="wheel-pointer"></div>
+                      <div className="wheel" style={{transform:`rotate(${wheelRotation}deg)`}}>
+                        <svg className="wheel-svg" viewBox="0 0 100 100">
+                          {[
+                            '%10 İndirim', '%10 İndirim', '%20 İndirim', '%20 İndirim', 
+                            '1 Fal Hakkı', '1 Fal Hakkı', '❤️ Aşk Falı', '💰 Kariyer', 
+                            '🔍 Tarama', '💎 PREMIUM'
+                          ].map((label, i) => {
+                            const sliceAngle = 36;
+                            const startAngle = i * sliceAngle;
+                            const endAngle = (i + 1) * sliceAngle;
+                            const rad1 = (startAngle - 90) * Math.PI / 180;
+                            const rad2 = (endAngle - 90) * Math.PI / 180;
+                            const x1 = 50 + 50 * Math.cos(rad1);
+                            const y1 = 50 + 50 * Math.sin(rad1);
+                            const x2 = 50 + 50 * Math.cos(rad2);
+                            const y2 = 50 + 50 * Math.sin(rad2);
+                            const d = `M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`;
+                            
+                            const textAngle = startAngle + sliceAngle / 2;
+                            const tr = 35; // Text radius from center
+                            const tx = 50 + tr * Math.cos((textAngle - 90) * Math.PI / 180);
+                            const ty = 50 + tr * Math.sin((textAngle - 90) * Math.PI / 180);
+                            
+                            const isPremium = i === 9;
 
-                {giftTab === 'cups' && currentUser && (
-                  <div className="cups-section" style={{position:'relative'}}>
-                    {cooldowns.cups > 0 && currentUser.pass !== '010409' && (
-                       <div className="cooldown-overlay-gold">
-                         <div className="timer-box">
-                           <span className="timer-label">FINCANLAR DOLUYOR</span>
-                           <div className="countdown-display">{formatCooldown(cooldowns.cups)}</div>
-                         </div>
+                            return (
+                              <g key={i}>
+                                <path 
+                                  d={d} 
+                                  className={isPremium ? 'wheel-slice-premium' : 'wheel-slice-normal'} 
+                                />
+                                <text 
+                                  x={tx} y={ty} 
+                                  transform={`rotate(${textAngle}, ${tx}, ${ty})`} 
+                                  className="wheel-label"
+                                >
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
                        </div>
-                    )}
-                    <p className="gift-hint">{t.cupHint}</p>
-                    <div className="cups-grid">
+                    </div>
+                    <div className="gift-controls" style={{marginTop:'2rem'}}>
+                        {cooldowns.wheel > 0 && currentUser?.pass !== '010409' ? (
+                          <div className="cooldown-timer">{formatCooldown(cooldowns.wheel)}</div>
+                        ) : (
+                          <>
+                            {giftMessage && <div className="gift-stat-msg" style={{margin:'1rem 0', color:'#FFDF73', fontWeight:600}}>{giftMessage}</div>}
+                            <button className="btn-upload" onClick={handleSpin} disabled={isSpinning} style={{width:'100%', margin:0}}>
+                              {isSpinning ? 'Dönüyor...' : (t.spinBtn || 'Çevir')}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                  </div>
+                ) : giftTab === 'cups' ? (
+                  <div className="cups-section" style={{textAlign:'center'}}>
+                    <p className="gift-hint" style={{opacity:0.6, fontSize:'0.9rem', marginBottom:'2rem'}}>{t.cupHint || 'Yıldızın olduğu fincanı bul!'}</p>
+                    <div className="cups-grid" style={{display:'flex', justifyContent:'center', gap:'1rem'}}>
                       {cupsFlipped.map((f, i) => (
-                        <div key={i} className={`gift-card ${f ? 'flipped' : ''}`} onClick={() => handleCupSelection(i)}>
-                          <div className="card-inner">
-                            <div className="card-front">☕</div>
-                            <div className="card-back">{i === cupStarIndex ? '🌟' : '❌'}</div>
+                        <div key={i} className={`gift-card ${f?'flipped':''}`} onClick={()=>handleCupSelection(i)} style={{width:'80px', height:'100px', cursor:'pointer', perspective:'1000px'}}>
+                          <div className="card-inner" style={{position:'relative', width:'100%', height:'100%', transition:'transform 0.6s', transformStyle:'preserve-3d', transform: f ? 'rotateY(180deg)' : 'none'}}>
+                            <div className="card-front" style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', background:'#222', border:'2px solid #D4AF37', borderRadius:'15px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem'}}>?</div>
+                            <div className="card-back" style={{position:'absolute', width:'100%', height:'100%', backfaceVisibility:'hidden', background:'#D4AF37', color:'#111', borderRadius:'15px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem', transform:'rotateY(180deg)'}}>{i === cupStarIndex ? '⭐' : '💨'}</div>
                           </div>
                         </div>
                       ))}
                     </div>
-                    {giftMessage && <div className="gift-stat-msg" style={{marginTop:'1.5rem', color:'#D4AF37', fontWeight:700}}>{giftMessage}</div>}
+                     {cooldowns.cups > 0 && currentUser?.pass !== '010409' ? (
+                        <div className="cooldown-timer">{formatCooldown(cooldowns.cups)}</div>
+                     ) : (
+                        <>
+                          {giftMessage && <div className="gift-stat-msg" style={{marginTop:'2rem', color:'#FFDF73', fontWeight:600}}>{giftMessage}</div>}
+                          <div style={{marginTop:'1.5rem', opacity:0.5, fontSize:'0.8rem'}}>2 deneme hakkın var.</div>
+                        </>
+                     )}
                   </div>
-                )}
-
-                {giftTab === 'destiny' && currentUser && (
-                  <div className="destiny-section" style={{textAlign:'center'}}>
-                     <div className="destiny-map-container" style={{position:'relative', marginBottom:'1.5rem'}}>
-                        {cooldowns.destiny > 0 && currentUser.pass !== '010409' && (
-                          <div className="destiny-lock-overlay" style={{position:'absolute', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(5px)', zIndex:10, borderRadius:'20px', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                             <div className="timer-box" style={{borderStyle:'dashed', opacity:0.9}}>
-                                <span className="timer-label">YILDIZLARIN DİZİLMESİ BEKLENİYOR</span>
-                                <div className="countdown-display">{formatCooldown(cooldowns.destiny)}</div>
-                             </div>
-                          </div>
+                ) : (
+                  <div className="destiny-section">
+                    <div className="destiny-container">
+                       {cooldowns.destiny > 0 && currentUser?.pass !== '010409' && (
+                           <div className="cooldown-timer" style={{marginBottom:'2rem'}}>{formatCooldown(cooldowns.destiny)}</div>
                         )}
-                        <div className="destiny-map">
-                           <svg className="destiny-path-svg">
-                              <path d="M 40 210 Q 150 110 250 210 T 450 210 T 650 210 T 850 210 T 1050 210 T 1250 210 T 1450 210" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="3" strokeDasharray="10 5" />
-                           </svg>
-                           <div className="destiny-nodes">
-                              {[...Array(30)].map((_, i) => {
-                                const day = i + 1;
-                                const isCompleted = (currentUser.dailyRewardStreak || 0) >= day;
-                                const isActive = (currentUser.dailyRewardStreak || 0) + 1 === day && cooldowns.destiny === 0;
-                                return (
-                                  <div key={i} className={`destiny-node ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
-                                     <div className="node-circle">
-                                       {isCompleted ? '✓' : day}
-                                     </div>
-                                     <div className="node-reward">+{getDestinyReward(day).amount} CP</div>
-                                  </div>
-                                );
+                        <div className={`destiny-content ${cooldowns.destiny > 0 ? 'on-cooldown' : ''}`}>
+                           <div className="destiny-grid">
+                              {Array.from({length:30}).map((_, i) => {
+                                 const dayNum = i + 1;
+                                 const isSealed = (currentUser?.dailyRewardStreak || 0) >= dayNum;
+                                 const isToday = dayNum === ((currentUser?.dailyRewardStreak || 0) + 1);
+                                 const alreadyClaimedToday = currentUser?.lastDailyRewardDate === new Date().toISOString().split('T')[0];
+                                 const isClaimable = isToday && !alreadyClaimedToday;
+                                 const reward = getDestinyReward(dayNum);
+
+                                 return (
+                                   <div 
+                                    key={i} 
+                                    className={`destiny-node ${isSealed?'sealed':''} ${isClaimable?'claimable':''} ${isToday?'active-day':''}`}
+                                    onClick={() => isClaimable && !claimingDay && handleClaimDestinyReward()}
+                                   >
+                                      <span className="node-day-num">{dayNum}</span>
+                                      {isSealed ? <span className="seal-stamp">🕯️</span> : (
+                                        <div className="node-visual" style={{fontSize: reward.extra ? '1.1rem' : '1rem'}}>
+                                          {reward.extra ? '🎡' : (dayNum % 5 === 0 ? '💎' : '✨')}
+                                        </div>
+                                      )}
+                                      <div className="node-reward">
+                                        {reward.amount} CP
+                                        {reward.extra && <div style={{fontSize:'0.6rem', color:'#FFDF73', marginTop:'2px', fontWeight:700}}>+HEDİYE</div>}
+                                      </div>
+                                      
+                                      {/* Particle Effect during claim */}
+                                      {claimingDay === dayNum && (
+                                        <div style={{position:'absolute', inset:0, pointerEvents:'none'}}>
+                                           {Array.from({length:18}).map((_, pi) => (
+                                             <div 
+                                               key={pi} 
+                                               className="destiny-particle" 
+                                               style={{
+                                                 '--dx': `${(Math.random()-0.5)*220}px`, 
+                                                 '--dy': `${(Math.random()-0.5)*220}px`,
+                                                 left: '50%',
+                                                 top: '50%',
+                                                 animationDelay: `${Math.random()*0.4}s`
+                                               } as any}
+                                             ></div>
+                                           ))}
+                                        </div>
+                                      )}
+                                   </div>
+                                 );
                               })}
                            </div>
+                           <div className="destiny-footer">
+                              <p style={{fontSize:'0.85rem', color:'#D4AF37', marginBottom:'0.5rem', fontWeight:600}}>
+                                 {currentUser?.lastDailyRewardDate === new Date().toISOString().split('T')[0] 
+                                   ? 'Bugün kaderini mühürledin bilge kişi. Yarın tekrar gel.' 
+                                   : 'Bugünkü mührünü basarak kader yolunda ilerle.'}
+                              </p>
+                              <div style={{fontSize:'0.75rem', color:'rgba(255,255,255,0.4)'}}>
+                                 Seri: <strong style={{color:'#D4AF37'}}>{currentUser?.dailyRewardStreak || 0} / 30</strong>
+                                 {currentUser?.dailyRewardGraceUsed && <span style={{marginLeft:'1rem', color:'#ff9800', fontWeight:600}}>🛡️ Koruma Hakkı Kullanıldı</span>}
+                              </div>
+                           </div>
                         </div>
-                     </div>
-
-                     <div style={{position:'relative'}}>
-                        {claimingDay && (
-                          <div className="claiming-particles">
-                             {[...Array(12)].map((_, i) => (
-                               <div key={i} className="particle" style={{ '--x': `${Math.random()*200-100}px`, '--y': `${Math.random()*200-100}px` } as any}></div>
-                             ))}
-                          </div>
-                        )}
-                        <button 
-                          className="destiny-claim-btn" 
-                          onClick={handleClaimDestinyReward} 
-                          disabled={cooldowns.destiny > 0 || !!claimingDay}
-                        >
-                          {claimingDay ? 'MÜHÜRLENİYOR...' : cooldowns.destiny > 0 ? 'YARIN GEL 🌙' : 'GÜNÜ MÜHÜRLE ✨'}
-                        </button>
-                     </div>
+                    </div>
                   </div>
                 )}
-              </div>
-           </div>
-        </div>
-      )}
-      {showAvatarModal && (
-        <div className="modal-overlay" onClick={() => setShowAvatarModal(false)} style={{zIndex: 2000000}}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'400px'}}>
-              <button className="modal-close-btn" onClick={() => setShowAvatarModal(false)}>✕</button>
-              <div className="avatar-preview-content">
-                 <h2 className="title-font" style={{color:'#D4AF37', marginBottom:'1.5rem'}}>Fotoğrafı Onayla</h2>
-                 <div className="preview-avatar-circle">
-                    {avatarPreview && <img src={avatarPreview} alt="Preview" />}
-                 </div>
-                 <p style={{color:'rgba(255,255,255,0.6)', marginBottom:'2rem', fontSize:'0.9rem'}}>Bu sizin mistik kimliğiniz olacak. Onaylıyor musunuz?</p>
-                 <div style={{display:'flex', gap:'1rem'}}>
-                    <button className="btn-upload" style={{flex:1, margin:0, background:'transparent', border:'1px solid rgba(255,255,255,0.2)'}} onClick={() => setShowAvatarModal(false)}>VAZGEÇ</button>
-                    <button className="btn-upload" style={{flex:1, margin:0}} onClick={handleAvatarConfirm}>ONAYLA</button>
-                 </div>
               </div>
            </div>
         </div>
@@ -829,5 +1802,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
