@@ -31,8 +31,8 @@ body::before {
 }
 .header { text-align: center; z-index: 2; position: relative; }
 .header h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.35rem;
+  margin-bottom: 0.3rem;
   background: linear-gradient(135deg, #FFDF73, #D4AF37, #AA7700);
   background-clip: text;
   -webkit-background-clip: text;
@@ -142,7 +142,7 @@ body::before {
   transition: 0.3s;
 }
 .review-card:hover { border-color: #D4AF37; transform: translateX(-5px); background: linear-gradient(90deg, rgba(212,175,55,0.1), transparent); }
-.review-stars { color: #FFDF73; font-size: 0.75rem; margin-bottom: 0.5rem; letter-spacing: 2px; }
+.review-stars { color: #FFDF73; font-size: 0.75rem; margin-bottom: 0.3rem; letter-spacing: 2px; }
 .review-name { font-size: 0.7rem; font-weight: 700; color: #D4AF37; margin-bottom: 0.4rem; font-family: 'Poppins', sans-serif; }
 .review-text { font-size: 0.7rem; font-weight: 300; line-height: 1.6; color: #EAEAEA; }
 
@@ -368,7 +368,7 @@ body::before {
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(230, 57, 70, 0.05);
   position: relative;
 }
-.ban-card h1 { color: #ff4d4d; font-size: 1.8rem; margin-bottom: 1.5rem; text-shadow: 0 5px 20px rgba(230,57,70,0.4); }
+.ban-card h1 { color: #ff4d4d; font-size: 1.35rem; margin-bottom: 1.5rem; text-shadow: 0 5px 20px rgba(230,57,70,0.4); }
 .ban-card p { opacity: 0.9; font-size: 1.15rem; margin-bottom: 3rem; color: #f0f0f0; font-weight: 300; line-height: 1.6; }
 
 .support-textarea {
@@ -451,7 +451,7 @@ body::before {
 .store-tier::before { content:''; position:absolute; top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg, transparent, rgba(212,175,55,0.05), transparent); transform:translateX(-100%); transition:0.8s; }
 .store-tier:hover::before { transform:translateX(100%); }
 .store-tier ul { list-style: none; margin: 1.5rem 0; font-size: 0.95rem; opacity: 0.8; line-height: 1.8; flex: 1; }
-.store-tier h3 { margin-bottom: 0.5rem; }
+.store-tier h3 { margin-bottom: 0.3rem; }
 
 /* -- LUXURY CRM ADMIN -- */
 .admin-lock {
@@ -512,7 +512,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.35rem;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   filter: grayscale(1) opacity(0.5);
@@ -556,8 +556,8 @@ body::before {
 .admin-stat-card.red { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 10px 20px rgba(239, 68, 68, 0.05); }
 .admin-stat-card.red strong { color: #ef4444; }
 
-.admin-stat-card span { display: block; font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
-.admin-stat-card strong { font-size: 1.8rem; color: #D4AF37; font-family: 'Playfair Display', serif; }
+.admin-stat-card span { display: block; font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem; }
+.admin-stat-card strong { font-size: 1.35rem; color: #D4AF37; font-family: 'Playfair Display', serif; }
 
 .user-row { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
 .user-row:hover { background: rgba(212, 175, 55, 0.03); }
@@ -1038,7 +1038,7 @@ body::before {
 }
 
 .placeholder-icon {
-  font-size: 1.8rem;
+  font-size: 1.35rem;
   filter: drop-shadow(0 0 5px #D4AF37);
 }
 
