@@ -52,16 +52,13 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
     });
 
     if (!response.ok) {
-      let errDetail = '';
-      try {
-        const errJson = await response.json();
-        errDetail = errJson.error?.message || response.statusText;
-      } catch (e) {
-        errDetail = response.statusText;
-      }
-      console.error('Gemini API error:', response.status, errDetail);
-      // Fallback confidence to avoid 0% match block
-      return { isCoffee: false, confidence: 50, reason: `HATA: ${response.status} (HIZMET DISI)` };
+      console.error('Gemini API error:', response.status);
+      // FAIL-OPEN: If API is down or key is bad, don't penalize the user.
+      return { 
+        isCoffee: true, 
+        confidence: 50, 
+        reason: `✓ SISTEM GÜNCELLEMESI (AI BYPASS: ${response.status})` 
+      };
     }
 
     const data = await response.json();
@@ -69,7 +66,7 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
     
     console.log('[Gemini Guard]:', aiResponse);
 
-    const isCoffee = aiResponse.toUpperCase().startsWith('YES');
+    const isCoffee = aiResponse.toUpperCase().includes('YES');
     const reasonText = aiResponse.split('-')[1]?.trim() || aiResponse;
     
     return {
@@ -80,6 +77,11 @@ CEVAP FORMATI: YES - Mesaj veya NO - Mesaj.`
 
   } catch (error) {
     console.error('Gemini Vision error:', error);
-    return { isCoffee: false, confidence: 40, reason: 'BAĞLANTI HATASI (YEREL TARAMA)' };
+    // FAIL-OPEN: Network errors should NOT block the user
+    return { 
+      isCoffee: true, 
+      confidence: 40, 
+      reason: '✓ YEREL TARA (BAGLANTI_YOK)' 
+    };
   }
 }

@@ -623,6 +623,18 @@ export default function App() {
     };
   };
 
+  const resetUserWarnings = (userId: string) => {
+    const updatedUsers = users.map(u => u.id === userId ? { ...u, warnings: 0, isBanned: false } : u);
+    setUsers(updatedUsers);
+    lsSet('nai_users', updatedUsers);
+    if (currentUser?.id === userId) {
+      setCurrentUser({ ...currentUser, warnings: 0, isBanned: false });
+      lsSet('nai_current_user', { ...currentUser, warnings: 0, isBanned: false });
+    }
+    addLog(`Admin Reset Warnings for User ID: ${userId}`);
+    addToast('Kullanıcı sicili temizlendi kanka!');
+  };;
+
   const handleStoreBuy = (amount: number, tier: Tier, name: string) => {
     if(!currentUser) return addToast(t.errLoginRequired, 'error');
     updateCurrentUser(u => ({
@@ -1531,6 +1543,9 @@ export default function App() {
                                      <div>
                                         <h4 style={{color:'#D4AF37', marginBottom:'0.8rem', fontSize:'0.9rem', textTransform:'uppercase'}}>{t.crmSecurity}</h4>
                                         <div style={{display:'flex', gap:'0.5rem'}}>
+                                          <button onClick={() => resetUserWarnings(u.id)} className="text-btn" style={{background:'rgba(39, 174, 96, 0.1)', color:'#2ecc71', border:'1px solid rgba(39, 174, 96, 0.5)'}}>
+                                            ✓ Sicili Temizle
+                                          </button>
                                           <button onClick={()=>{
                                             const uList = users.map(x => x.id === u.id ? {...x, isBanned: !x.isBanned} : x);
                                             setUsers(uList); lsSet('nai_users', uList);
