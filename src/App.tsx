@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
-import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
+import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'
 import { geminiValidateCoffeeCup } from './data/geminiVision'
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
