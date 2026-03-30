@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
-import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'
+import { analyzeImage, generateUniqueFortune, validateCoffeeCup } from './data/imageAnalysis'
 import { geminiValidateCoffeeCup } from './data/geminiVision'
 
 type LangCode = 'tr' | 'en' | 'es' | 'ar' | 'ru';
@@ -24,7 +24,6 @@ interface User {
   dailyRewardGraceUsed?: boolean;
   lastDailyRewardTimestamp?: number;
   avatar_url?: string;
-  gender?: 'male' | 'female' | 'other';
   rank?: string;
 }
 interface PastFortune { id: string; username: string; date: string; fortune: string; highlights: any[]; imageUrl: string; mood?: string; }
@@ -84,63 +83,9 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-const GoldenGenderIcon = ({ gender, className = '' }: { gender?: 'male' | 'female' | 'other', className?: string }) => {
-  const isFemale = gender === 'female';
-  const isOther = gender === 'other';
-  return (
-    <svg className={`golden-gender-icon ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FBBC05" />
-          <stop offset="50%" stopColor="#D4AF37" />
-          <stop offset="100%" stopColor="#C5A028" />
-        </linearGradient>
-      </defs>
-      {isFemale ? (
-        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
-      ) : isOther ? (
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
-      ) : (
-        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="url(#goldGrad)" style={{filter:'drop-shadow(0 0 5px rgba(212,175,55,0.5))'}} />
-      )}
-      {isFemale && <circle cx="12" cy="18" r="1.5" fill="#fff" opacity="0.5" />}
-    </svg>
-  );
-};
-
-
-
-const MusicIcon = ({ paused }: { paused: boolean }) => (
-  <svg className="music-icon" viewBox="0 0 24 24" fill="currentColor">
-    {paused ? (
-      <path d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73l4.73 4.73 1.27-1.27L4.27 3zM14 7h4V3h-6v5.18l2 2V7z" />
-    ) : (
-      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-    )}
-  </svg>
-);
-
-const YouTubeBackgroundMusic = ({ paused, videoId = 'goQ4gzXYEBg' }: { paused: boolean, videoId?: string }) => {
-  return (
-    <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-      {!paused && (
-        <iframe
-          width="1"
-          height="1"
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&controls=0&disablekb=1&fs=0&modestbranding=1&iv_load_policy=3&enablejsapi=1`}
-          title="Music Player"
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-        ></iframe>
-      )}
-    </div>
-  );
-};
-
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [lang, setLang] = useState<LangCode>('tr');
-  const [isMusicPaused, setIsMusicPaused] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
   
@@ -167,7 +112,7 @@ export default function App() {
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login'|'register'|'forgot'>('login');
-  const [authInp, setAuthInp] = useState({ user: '', pass: '', confirmPass: '', birthDate: '', luckyWord: '', gender: 'male' as 'male'|'female'|'other', consent: false });
+  const [authInp, setAuthInp] = useState({ user: '', pass: '', confirmPass: '', birthDate: '', luckyWord: '', consent: false });
   const [showPass, setShowPass] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -184,8 +129,7 @@ export default function App() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [mood, setMood] = useState<Mood>(null);
-  const [randomFactIndices, setRandomFactIndices] = useState<number[]>([0, 1, 2, 3]);
-  const [isFactUpdating, setIsFactUpdating] = useState(false);
+  const [randomFactIndices, setRandomFactIndices] = useState<number[]>([0, 1, 2]);
   const [geminiStatus, setGeminiStatus] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -337,19 +281,15 @@ export default function App() {
   useEffect(() => {
     const arr = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
     const updateFacts = () => {
-      setIsFactUpdating(true);
-      setTimeout(() => {
-        const idxs: number[] = [];
-        while(idxs.length < 4 && idxs.length < arr.length) {
-          const r = Math.floor(Math.random() * arr.length);
-          if(!idxs.includes(r)) idxs.push(r);
-        }
-        setRandomFactIndices(idxs);
-        setIsFactUpdating(false);
-      }, 600);
+      const idxs: number[] = [];
+      while(idxs.length < 4 && idxs.length < arr.length) {
+        const r = Math.floor(Math.random() * arr.length);
+        if(!idxs.includes(r)) idxs.push(r);
+      }
+      setRandomFactIndices(idxs);
     };
     updateFacts();
-    const timer = setInterval(updateFacts, 12000);
+    const timer = setInterval(updateFacts, 10000);
     return () => clearInterval(timer);
   }, [lang]);
 
@@ -504,7 +444,7 @@ export default function App() {
         tier: 'free', 
         isBanned: false,
         birthDate: authInp.birthDate,
-        luckyWord: authInp.luckyWord, gender: authInp.gender,
+        luckyWord: authInp.luckyWord,
         horoscope
       };
       
@@ -520,7 +460,7 @@ export default function App() {
       addToast(t.toastWelcome.replace('{u}', u.username));
     }
     setShowAuthModal(false); 
-    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', gender:'male', consent:false});
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
   };
 
   const handlePasswordRecovery = () => {
@@ -548,7 +488,7 @@ export default function App() {
     addLog(`Password Recovered for: ${authInp.user}`);
     addToast('Şifren başarıyla yenilendi! Artık yeni anahtarınla içeri girebilirsin.');
     setAuthMode('login');
-    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', gender:'male', consent:false});
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
   };
 
   const startAnalysis = async () => {
@@ -578,19 +518,35 @@ export default function App() {
       setGeminiStatus(geminiResult.reason);
       console.log('[AI Decision]:', geminiResult);
 
+      // Step 2: Hybrid Fallback — If AI fails or rejects, check locally
+      const sig = analyzeImage(canvas, ctx);
+      const localResult = validateCoffeeCup(sig);
+
+      if (!geminiResult.isCoffee && !isAdmin) {
+        if (localResult.isValid && localResult.passedCount >= 6) {
+          console.log('[Hybrid Guard]: Gemini rejected, but Local Vision is highly confident (6+ flags).');
+          // Overwrite rejection if local vision is VERY confident
+          geminiResult.isCoffee = true;
+          geminiResult.confidence = localResult.confidence;
+          geminiResult.reason = 'LOCAL_VISION_MATCH (HIGH_CONFIDENCE)';
+          setGeminiStatus('✅ Local Vision Onayladı (Yüksek Güven)');
+        }
+      }
+
       await new Promise(resolve => setTimeout(resolve, 3200));
 
       if (!geminiResult.isCoffee && !isAdmin) {
         // Strike system (Skip for Admin)
         const strikes = (currentUser.warnings || 0) + 1;
-        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 3 };
+        // Increased strike limit to 10 for a'daha rahat' experience
+        const updatedUser = { ...currentUser, warnings: strikes, isBanned: strikes >= 10 };
         const allUsers = users.map((u: any) => u.id === currentUser.id ? updatedUser : u);
         setUsers(allUsers); lsSet('nai_users', allUsers);
         setCurrentUser(updatedUser); lsSet('nai_current_user', updatedUser);
 
         setStage('upload');
-        if (strikes >= 3) {
-          addToast(t.errNotCoffee(3, geminiResult.confidence), 'error');
+        if (strikes >= 10) {
+          addToast(t.errNotCoffee(10, geminiResult.confidence), 'error');
         } else {
           setError(t.errNotCoffee(strikes, geminiResult.confidence));
         }
@@ -602,8 +558,7 @@ export default function App() {
         console.warn('AI failed but Admin bypass active.');
       }
 
-      const sig = analyzeImage(canvas, ctx);
-      const result = generateUniqueFortune(sig, lang, Date.now());
+      const result = generateUniqueFortune(sig, lang, Date.now(), currentUser.horoscope);
       setAiResult(result);
       setLuckyNumbers(getLuckyNumbers(sig.seed));
 
@@ -800,15 +755,7 @@ export default function App() {
   const factArray = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
 
   return (
-    <div className={`app-container ${theme}-theme`}>
-      <YouTubeBackgroundMusic paused={isMusicPaused} />
-      <button 
-        className={`music-toggle-btn ${!isMusicPaused ? 'playing' : 'muted'}`} 
-        onClick={() => setIsMusicPaused(!isMusicPaused)}
-        title={isMusicPaused ? 'Müziği Aç' : 'Müziği Kapat'}
-      >
-        <MusicIcon paused={isMusicPaused} />
-      </button>
+    <div className="app-container">
       <div style={{position:'fixed', top:'20px', right:'20px', zIndex:100000}}>
         {toasts.map(toast => (
           <div key={toast.id} style={{background: toast.type==='error'?'#ff4d4d':'linear-gradient(135deg, #FFDF73, #D4AF37)', color:toast.type==='error'?'#fff':'#111', padding:'1rem 2rem', borderRadius:'30px', marginBottom:'1rem', fontWeight:600, boxShadow:'0 10px 20px rgba(0,0,0,0.5)'}}>
@@ -821,9 +768,9 @@ export default function App() {
          <div style={{fontSize:'1.8rem', marginBottom:'1.5rem', color:'#D4AF37', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))', fontWeight:700, fontFamily:'Playfair Display'}}>NAI</div>
          <div style={{fontSize:'0.85rem', letterSpacing:'3px', marginBottom:'0.5rem', opacity:0.6, fontWeight:600, textTransform:'uppercase', color:'#D4AF37'}}>Oracle Insights</div>
          
-         <div className={`info-list ${isFactUpdating ? 'fading' : ''}`}>
-             {randomFactIndices.map((idx, index) => (
-               <div key={`${idx}-${index}`} className="info-item" style={{animationDelay: `${index * 0.12}s`}}>
+         <div className="info-list">
+            {randomFactIndices.map((idx, index) => (
+              <div key={`${idx}-${index}`} className="info-item">
                 <div className="info-icon">✦</div>
                 <div className="info-text">{factArray[idx]}</div>
               </div>
@@ -1122,10 +1069,9 @@ export default function App() {
                     {currentUser.avatar_url ? (
                       <img src={currentUser.avatar_url} alt="avatar" className="profile-avatar-img" />
                     ) : (
-                      
-                            <div className="avatar-placeholder gold-aura">
-                              <GoldenGenderIcon gender={currentUser.gender} className="placeholder-svg-gold" />
-                            </div>
+                      <div className="avatar-placeholder">
+                         <span className="placeholder-icon">👤</span>
+                      </div>
                     )}
                  </div>
                  <input 
@@ -1172,7 +1118,7 @@ export default function App() {
                       { label: 'Tier', value: currentUser.tier.toUpperCase() },
                       { label: 'Toplam Fal', value: pastFortunes.filter(f=>f.username===currentUser.username).length },
                     ].map((row, i) => (
-                      <div key={i} className="info-row-animate" style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none', animationDelay: `${i * 0.15}s`}}>
+                      <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'0.7rem 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none'}}>
                         <span style={{opacity:0.6, fontSize:'0.9rem'}}>{row.label}</span>
                         <strong className={(row as any).danger ? 'pulse-error' : ''} style={{color: (row as any).danger ? '#ff4d4d' : '#D4AF37'}}>{row.value}</strong>
                       </div>
@@ -1321,32 +1267,6 @@ export default function App() {
                       <div style={{marginBottom:'2.5rem'}}>
                         <input placeholder="Şanslı Kelimeniz" value={authInp.luckyWord} onChange={e=>setAuthInp({...authInp, luckyWord: e.target.value})} className="auth-input" style={{marginBottom:'0.4rem'}} />
                         <div style={{color:'#D4AF37', fontSize:'0.75rem', marginLeft:'0.5rem', fontWeight:500}}>Mistik şanslı kelimenizi asla unutmayın; şifrenizi kurtarmanın tek yolu budur!</div>
-                      <div className="gender-selection" style={{marginBottom:'2.5rem'}}>
-                        <div style={{fontSize:'0.75rem', color:'#D4AF37', marginBottom:'0.8rem', marginLeft:'0.5rem', fontWeight:600}}>Cinsiyetiniz</div>
-                        <div style={{display:'flex', gap:'0.8rem'}}>
-                          {(['male', 'female', 'other'] as const).map(g => (
-                            <button 
-                              key={g} 
-                              type="button" 
-                              className={`gender-btn ${authInp.gender === g ? 'active' : ''}`}
-                              onClick={() => setAuthInp({...authInp, gender: g})}
-                              style={{
-                                flex: 1, 
-                                padding: '0.8rem', 
-                                borderRadius: '12px', 
-                                background: authInp.gender === g ? 'rgba(212, 175, 55, 0.2)' : 'rgba(0,0,0,0.3)',
-                                border: `1px solid ${authInp.gender === g ? '#D4AF37' : 'rgba(212, 175, 55, 0.1)'}`,
-                                color: authInp.gender === g ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                                fontSize: '0.85rem',
-                                transition: '0.3s',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {g === 'male' ? '👤 Erkek' : g === 'female' ? '🌸 Kadın' : '🌈 Diğer'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
                       </div>
                     </>
                   )}
