@@ -818,8 +818,8 @@ export default function App() {
       </div>
 
       <aside className="info-ticker">
-         <div style={{fontSize:'1.8rem', marginBottom:'1.5rem', color:'#D4AF37', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))', fontWeight:700, fontFamily:'Playfair Display'}}>NAI</div>
-         <div style={{fontSize:'0.85rem', letterSpacing:'3px', marginBottom:'0.5rem', opacity:0.6, fontWeight:600, textTransform:'uppercase', color:'#D4AF37'}}>Oracle Insights</div>
+         <div style={{fontSize:'1.4rem', marginBottom:'1rem', color:'#D4AF37', filter:'drop-shadow(0 0 10px rgba(212,175,55,0.4))', fontWeight:700, fontFamily:'Playfair Display'}}>NAI</div>
+         <div style={{fontSize:'0.75rem', letterSpacing:'2px', marginBottom:'0.3rem', opacity:0.6, fontWeight:600, textTransform:'uppercase', color:'#D4AF37'}}>Oracle Insights</div>
          
          <div className={`info-list ${isFactUpdating ? 'fading' : ''}`}>
              {randomFactIndices.map((idx, index) => (
