@@ -109,9 +109,38 @@ const GoldenGenderIcon = ({ gender, className = '' }: { gender?: 'male' | 'femal
 };
 
 
+
+const MusicIcon = ({ paused }: { paused: boolean }) => (
+  <svg className="music-icon" viewBox="0 0 24 24" fill="currentColor">
+    {paused ? (
+      <path d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73l4.73 4.73 1.27-1.27L4.27 3zM14 7h4V3h-6v5.18l2 2V7z" />
+    ) : (
+      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+    )}
+  </svg>
+);
+
+const YouTubeBackgroundMusic = ({ paused, videoId = 'goQ4gzXYEBg' }: { paused: boolean, videoId?: string }) => {
+  return (
+    <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      {!paused && (
+        <iframe
+          width="1"
+          height="1"
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&controls=0&disablekb=1&fs=0&modestbranding=1&iv_load_policy=3&enablejsapi=1`}
+          title="Music Player"
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+        ></iframe>
+      )}
+    </div>
+  );
+};
+
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [lang, setLang] = useState<LangCode>('tr');
+  const [isMusicPaused, setIsMusicPaused] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
   
@@ -486,7 +515,7 @@ export default function App() {
       addToast(t.toastWelcome.replace('{u}', u.username));
     }
     setShowAuthModal(false); 
-    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', gender:'male', consent:false});
   };
 
   const handlePasswordRecovery = () => {
@@ -514,7 +543,7 @@ export default function App() {
     addLog(`Password Recovered for: ${authInp.user}`);
     addToast('Şifren başarıyla yenilendi! Artık yeni anahtarınla içeri girebilirsin.');
     setAuthMode('login');
-    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', consent:false});
+    setAuthInp({user:'', pass:'', confirmPass:'', birthDate:'', luckyWord:'', gender:'male', consent:false});
   };
 
   const startAnalysis = async () => {
@@ -766,7 +795,15 @@ export default function App() {
   const factArray = coffeeFactsGlobal[lang as keyof typeof coffeeFactsGlobal] || coffeeFactsGlobal['en'];
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme}-theme`}>
+      <YouTubeBackgroundMusic paused={isMusicPaused} />
+      <button 
+        className={`music-toggle-btn ${!isMusicPaused ? 'playing' : 'muted'}`} 
+        onClick={() => setIsMusicPaused(!isMusicPaused)}
+        title={isMusicPaused ? 'Müziği Aç' : 'Müziği Kapat'}
+      >
+        <MusicIcon paused={isMusicPaused} />
+      </button>
       <div style={{position:'fixed', top:'20px', right:'20px', zIndex:100000}}>
         {toasts.map(toast => (
           <div key={toast.id} style={{background: toast.type==='error'?'#ff4d4d':'linear-gradient(135deg, #FFDF73, #D4AF37)', color:toast.type==='error'?'#fff':'#111', padding:'1rem 2rem', borderRadius:'30px', marginBottom:'1rem', fontWeight:600, boxShadow:'0 10px 20px rgba(0,0,0,0.5)'}}>
