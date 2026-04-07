@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
+import { OracleStore } from './components/OracleStore'
 import { content, coffeeFactsGlobal, mysticWhispers } from './data/locale'
 import { analyzeImage, generateUniqueFortune } from './data/imageAnalysis'
 import { geminiValidateCoffeeCup } from './data/geminiVision'
@@ -1351,6 +1352,7 @@ export default function App() {
                       <div style={{marginBottom:'2.5rem'}}>
                         <input placeholder="Şanslı Kelimeniz" value={authInp.luckyWord} onChange={e=>setAuthInp({...authInp, luckyWord: e.target.value})} className="auth-input" style={{marginBottom:'0.4rem'}} />
                         <div style={{color:'#D4AF37', fontSize:'0.75rem', marginLeft:'0.5rem', fontWeight:500}}>Mistik şanslı kelimenizi asla unutmayın; şifrenizi kurtarmanın tek yolu budur!</div>
+                      </div>
                       <div className="gender-selection" style={{marginBottom:'2.5rem'}}>
                         <div style={{fontSize:'0.75rem', color:'#D4AF37', marginBottom:'0.8rem', marginLeft:'0.5rem', fontWeight:600}}>Cinsiyetiniz</div>
                         <div style={{display:'flex', gap:'0.8rem'}}>
@@ -1377,13 +1379,19 @@ export default function App() {
                           ))}
                         </div>
                       </div>
+                      
+                      <div style={{display:'flex', alignItems:'center', gap:'0.8rem', marginBottom:'2rem', padding:'0 0.5rem'}}>
+                        <input type="checkbox" id="consent" checked={authInp.consent} onChange={e=>setAuthInp({...authInp, consent: e.target.checked})} style={{width:'18px', height:'18px', accentColor:'#D4AF37'}} />
+                        <label htmlFor="consent" style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.7)', cursor:'pointer'}}>Mistik yolculuğun kurallarını ve fısıltıları kabul ediyorum.</label>
                       </div>
                     </>
                   )}
 
-                  {authError && <div style={{color:'#ff4d4d', fontSize:'0.9rem', marginBottom:'1.5rem', textAlign:'center', background:'rgba(255,77,77,0.1)', border:'1px solid rgba(255,77,77,0.3)', padding:'0.8rem', borderRadius:'10px', fontWeight:600}}>{authError}</div>}
-
-                  <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={handleAuth}>{authMode === 'login' ? t.authLogin : t.authReg}</button>
+                  {authError && <div style={{color:'#ff4d4d', fontSize:'0.85rem', marginBottom:'1.5rem', textAlign:'center', fontWeight:600, background:'rgba(255,77,77,0.1)', padding:'0.8rem', borderRadius:'10px'}}>{authError}</div>}
+                  
+                  <button className="btn-upload" style={{margin:0, width:'100%', padding:'1.2rem'}} onClick={handleAuth}>
+                    {authMode === 'login' ? t.btnLogin : t.btnReg}
+                  </button>
                 </>
               )}
            </div>
@@ -1391,62 +1399,13 @@ export default function App() {
       )}
 
       {showPremium && (
-        <div className="modal-overlay" onClick={()=>setShowPremium(false)}>
-           <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{padding:'2.5rem', width:'95%', maxWidth:'1200px'}}>
-              <button className="modal-close-btn" onClick={()=>setShowPremium(false)}>✕</button>
-              <h2 className="title-font" style={{color:'#D4AF37', fontSize:'3.2rem', textAlign:'center', filter:'drop-shadow(0 0 15px rgba(212,175,55,0.3))'}}>Oracle Store</h2>
-              <p style={{color:'#fff', opacity:0.8, marginBottom:'3rem', textAlign:'center', fontSize:'1.1rem'}}>Invest in your cosmic destiny.</p>
-              
-              <div className="store-grid" style={{gap:'1.5rem', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', padding:'1rem'}}>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:3, tier:'free', name:t.storeBasic, price:'₺20'})}} style={{background:'linear-gradient(160deg, rgba(20,15,10,0.8), rgba(0,0,0,0.95))', minHeight:'320px'}}>
-                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeBasic}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.b}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺20</div>
-                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.b[0]}</li><li>{t.storeFeatures?.b[1]}</li><li>{t.storeFeatures?.b[2]}</li></ul>
-                 </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeCareer, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(0,40,20,0.4), rgba(0,0,0,0.95))', borderColor:'rgba(0,180,80,0.3)', minHeight:'320px'}}>
-                    <h3 className="title-font" style={{color:'#6ee7b7', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeCareer}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.c}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(0,180,80,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
-                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.c[0]}</li><li>{t.storeFeatures?.c[1]}</li><li>{t.storeFeatures?.c[2]}</li></ul>
-                 </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:10, tier:'free', name:t.storeSupreme, price:'₺50'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.05), rgba(0,0,0,0.95))', borderColor:'rgba(212,175,55,0.2)', minHeight:'320px'}}>
-                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeSupreme}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.s}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺50</div>
-                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.s[0]}</li><li>{t.storeFeatures?.s[1]}</li><li>{t.storeFeatures?.s[2]}</li></ul>
-                 </div>
-                 
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:5, tier:'free', name:t.storeLove, price:'₺80'})}} style={{background:'linear-gradient(160deg, rgba(80,0,40,0.3), rgba(0,0,0,0.95))', borderColor:'rgba(200,50,100,0.3)', minHeight:'320px'}}>
-                    <h3 className="title-font" style={{color:'#f9a8d4', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeLove}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.l}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(200,50,100,0.2)', paddingBottom:'0.5rem'}}>₺80</div>
-                    <ul style={{fontSize:'0.85rem', margin:0}}><li>{t.storeFeatures?.l[0]}</li><li>{t.storeFeatures?.l[1]}</li><li>{t.storeFeatures?.l[2]}</li></ul>
-                 </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium', name:t.storePremium, price:'₺99 / mo'})}} style={{background:'linear-gradient(160deg, rgba(255,223,115,0.1), rgba(20,15,10,0.95))', borderColor:'rgba(255,223,115,0.4)', minHeight:'320px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>✦</div>
-                    <h3 className="title-font" style={{color:'#FFDF73', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremium}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.p}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(255,223,115,0.2)', paddingBottom:'0.5rem'}}>₺99 / mo</div>
-                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.p[0]}</li><li>{t.storeFeatures?.p[1]}</li><li>{t.storeFeatures?.p[2]}</li></ul>
-                 </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'premium-extra', name:t.storePremiumExtra, price:'₺169 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.1), rgba(0,20,40,0.95))', borderColor:'#80BFFF', minHeight:'320px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem'}}>⚡</div>
-                    <h3 className="title-font" style={{color:'#80BFFF', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storePremiumExtra}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.pe}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(128,191,255,0.2)', paddingBottom:'0.5rem'}}>₺169 / mo</div>
-                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.pe[0]}</li><li>{t.storeFeatures?.pe[1]}</li><li>{t.storeFeatures?.pe[2]}</li></ul>
-                 </div>
-                 <div className="store-tier" onClick={()=>{if(!currentUser) return setShowAuthModal(true); setPurchasingPkg({amount:0, tier:'elite', name:t.storeElite, price:'₺249 / mo'})}} style={{background:'linear-gradient(160deg, rgba(212,175,55,0.2), rgba(0,0,0,0.95))', borderColor:'#D4AF37', boxShadow:'0 0 30px rgba(212,175,55,0.2)', minHeight:'320px'}}>
-                    <div style={{position:'absolute', top:'1rem', right:'1.5rem', fontSize:'1.2rem', textShadow:'0 0 10px #D4AF37'}}>✨</div>
-                    <h3 className="title-font" style={{color:'#D4AF37', fontSize:'1.4rem', marginBottom:'0.5rem'}}>{t.storeElite}</h3>
-                    <p style={{fontSize:'0.85rem', opacity:0.6, marginBottom:'1rem', lineHeight:1.4, color:'#EAEAEA'}}>{t.storeDescs?.e}</p>
-                    <div style={{fontWeight:800, fontSize:'1.4rem', color:'#fff', marginBottom:'1.5rem', borderBottom:'1px solid rgba(212,175,55,0.2)', paddingBottom:'0.5rem'}}>₺249 / mo</div>
-                    <ul style={{fontSize:'0.85rem', color:'#fff', margin:0}}><li>{t.storeFeatures?.e[0]}</li><li>{t.storeFeatures?.e[1]}</li><li>{t.storeFeatures?.e[2]}</li></ul>
-                 </div>
-              </div>
-           </div>
-        </div>
+        <OracleStore 
+          onClose={() => setShowPremium(false)}
+          currentUser={currentUser}
+          setPurchasingPkg={setPurchasingPkg}
+          setShowAuthModal={setShowAuthModal}
+          t={t}
+        />
       )}
 
       {purchasingPkg && (
@@ -1454,7 +1413,6 @@ export default function App() {
            <div className="fancy-modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'450px', padding:'3rem', textAlign:'center'}}>
               <h2 className="title-font" style={{color:'#D4AF37', fontSize:'2.2rem', margin:'0 0 0.5rem 0'}}>Checkout</h2>
               <p style={{color:'#EAEAEA', opacity:0.8, marginBottom:'2rem'}}>{purchasingPkg.name} — <strong>{purchasingPkg.price}</strong></p>
-              
               <div style={{background:'rgba(0,0,0,0.3)', padding:'1.5rem', borderRadius:'15px', border:'1px solid rgba(255,255,255,0.1)', marginBottom:'2rem'}}>
                  <div style={{fontSize:'0.9rem', color:'#aaa', marginBottom:'1rem'}}>Confirm Purchase Authorization</div>
                  <input type="password" placeholder={t.pass} value={purchasePassInput} onChange={e=>setPurchasePassInput(e.target.value)} onKeyUp={e => e.key==='Enter' && confirmPurchase()} style={{width:'100%', padding:'1rem', borderRadius:'10px', border:'1px solid rgba(212,175,55,0.4)', background:'rgba(0,0,0,0.6)', color:'#fff', outline:'none', textAlign:'center', letterSpacing:'3px', fontSize:'1.2rem'}} autoFocus />

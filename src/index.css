@@ -1,56 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --radius-none: 0px;
+  --radius-xs: 0.125rem;
+  --radius-default: 0.375rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.875rem;
+  --radius-full: 9999px;
+  --color-button-ripple-color: var(--button-ripple-color);
+  
+  /* Brand Colors */
+  --color-brand-gold: #D4AF37;
+  --color-brand-bronze: #8B6B3F;
+}
 
 :root {
-  /* LIGHT: Gentle, friendly sage green & cream */
-  --bg-color: #eef2eb;
-  --card-bg: rgba(255, 255, 255, 0.65);
-  --text-dark: #1f3322;
-  --text-light: #526655;
-  --accent-gold: #c08b5c;
-  --accent-hover: #a67449;
-  --error: #e63946;
-  --shadow-soft: 0 10px 40px rgba(31, 51, 34, 0.08);
-  --glass-border: rgba(192, 139, 92, 0.2);
-  --neon-glow: 0 0 15px rgba(192, 139, 92, 0.3);
+  --button-ripple-color: oklch(0.145 0 0 / 0.3);
+  --background: oklch(0.10 0 0);
+  --foreground: oklch(0.985 0 0);
 }
 
-[data-theme="dark"] {
-  /* DARK: Deep brown/black ("kahverengi siyah") with vibrant accents */
-  --bg-color: #110a08;
-  --card-bg: rgba(26, 15, 12, 0.7);
-  --text-dark: #fdfaf5;
-  --text-light: #d4a373;
-  --accent-gold: #e6b980;
-  --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.6);
-  --glass-border: rgba(230, 185, 128, 0.15);
-  --neon-glow: 0 0 20px rgba(230, 185, 128, 0.4);
+.dark {
+  --background: oklch(0.10 0 0);
+  --button-ripple-color: oklch(0.985 0 0 / 0.5);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body, html {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-dark);
-  line-height: 1.6;
-  min-height: 100vh;
-  transition: background-color 0.4s ease, color 0.4s ease;
-  overflow-x: hidden;
-}
-
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-button {
-  font-family: 'Poppins', sans-serif;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
 }
